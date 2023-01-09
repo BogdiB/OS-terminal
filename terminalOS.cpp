@@ -5,7 +5,7 @@
 #define PATH_MAX 4096
 #define COMM_SIZE 100
 
-char historyFileName[] = "historyTest.txt";
+char historyFileName[] = "history.txt";
 
 bool deleteFile(char fileName[])
 {
@@ -29,7 +29,10 @@ void readFile(char fileName[])
 
 void addHistory(char command[])
 {
-    std::ofstream history(historyFileName, std::ios::app); // in append mode
+    // if the command is just an enter then don't add to the history
+    if (command[0] == '\0')
+        return;
+    std::ofstream history(historyFileName, std::ios::app); // open the history file in append mode
     history << command << '\n';
     history.close();
 }
@@ -38,6 +41,7 @@ bool commandDecrypt()
 {
     char initialCommand[COMM_SIZE], command[COMM_SIZE], c;
     short i = 0, cmdlen;
+    // constructing the command strings
     while((c = getc(stdin)) != '\n')
     {
         // keep the initial command for keeping history
@@ -71,10 +75,9 @@ bool commandDecrypt()
         return false;
     else if (strcmp(command, "history") == 0 || strcmp(command, "readh") == 0 || strcmp(command, "cath") == 0)
         readFile(historyFileName);
-    else if (strcmp(command, "deleteh") == 0 || strcmp(command, "delh") == 0)
+    else if (strcmp(command, "deleteh") == 0 || strcmp(command, "delh") == 0 || strcmp(command, "clearh") == 0)
         deleteFile(historyFileName);
     else std::cout << "Command '" << command << "' not found.\n";
-    // actually check the command before the else not found (use switch?)
 
     return true;
 }

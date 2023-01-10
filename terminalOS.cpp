@@ -5,22 +5,29 @@
 // #include <termios.h>
 // #include <readline.h> // search this on google for arrow things
 #define PATH_MAX 4096
-#define COMM_SIZE 100
+#define COMM_SIZE 101 // last char is for \0
+#define MAX_WORDS 20
+#define MAX_WORD_CHARS 51 // last char is for \0
 
 char historyFileName[] = "history.txt", currentPath[PATH_MAX];
-int currentHistoryFileLine, endHistoryFileLine = 0; // 0 for these values means that it doesn't exist
+short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
+// int currentHistoryFileLine, endHistoryFileLine = 0; // 0 for these values means that it doesn't exist
 
-bool deleteFile(char fileName[])
+void dirname(char *command)
 {
-    currentHistoryFileLine = 0;
-    endHistoryFileLine = 0;
+    std::cout << "Dirname called.\n";
+}
+
+void deleteFile(char fileName[])
+{
+    // currentHistoryFileLine = 0;
+    // endHistoryFileLine = 0;
     if (remove(fileName) == 0)
     {
         std::cout << "File '" << fileName << "' succesfully deleted.\n";
-        return true;
+        return;
     }
     std::cout << "Error deleting file '" << fileName << "': No such file or directory.\n";
-    return false;
 }
 
 void readFile(char fileName[])
@@ -37,7 +44,7 @@ void addHistory(char command[])
     // if the command is just an enter then don't add to the history
     if (command[0] == '\0')
         return;
-    endHistoryFileLine += 1;
+    // endHistoryFileLine += 1;
     std::ofstream history(historyFileName, std::ios::app); // open the history file in append mode
     history << command << '\n';
     history.close();
@@ -49,7 +56,8 @@ bool commandDecrypt()
     // std::cin.clear();
     // std::cin.ignore();
 
-    char initialCommand[COMM_SIZE], command[COMM_SIZE], c/*AC[3]*/;
+    char initialCommand[COMM_SIZE], command[COMM_SIZE], c, words[MAX_WORDS][MAX_WORD_CHARS]/*, AC[3]*/;
+    short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
     short i = 0, cmdlen;
 
     // TODO: if I touch this again before I finish the commands beat me
@@ -140,14 +148,63 @@ bool commandDecrypt()
     // else
     // {
         // constructing the command strings
+        wordNr = 0;
+        for (short k = 0; k < MAX_WORDS; ++k)
+            wordCharsNr[k] = 0;
+        // removes starting whitespace
+        char p;
+        while((p = std::cin.peek()) == ' ')
+            c = getc(stdin);
+        //TODO: remove mid command and ending whitespace
         while((c = getc(stdin)) != '\n' && c > 0)
         {
+            if (c == ' ')
+            {
+                // if ((p = std::cin.peek()) != ' ' && p != '\n')
+                // {
+                    words[wordNr][wordCharsNr[wordNr]] = '\0';
+                    ++wordNr;
+                // }
+                // else
+                // {
+                //     while((p = std::cin.peek()) == ' ') // removes random whitespace
+                //         c = getc(stdin);
+                //     if ((p = std::cin.peek()) != '\n')
+                //     {
+                //         words[wordNr][wordCharsNr[wordNr]] = c;
+                //         ++wordNr;
+                //     }
+                // }
+            }
+            else words[wordNr][wordCharsNr[wordNr]++] = c;
             // keep the initial command for keeping history
             initialCommand[i] = c;
-            // make the command lowercase
+            // make the command lowercase for the one word case
             command[i] = tolower(c);
             ++i;
-            // this if is for validating the size of the input
+            // these ifs are for validating the size of the input
+            if (wordNr >= MAX_WORDS) // max is 19 when comparing, not 20, because it starts from 0
+            {
+                // clearing the stdin
+                std::cin.clear();
+                std::cin.ignore();
+                std::cout << "Word limit per command reached, please only input" << MAX_WORDS << " words per command.\n";
+                initialCommand[i] = '\0';
+                command[i] = '\0';
+                words[wordNr][wordCharsNr[wordNr]] = '\0';
+                return true;
+            }
+            if (wordCharsNr[wordNr] >= MAX_WORD_CHARS)
+            {
+                // clearing the stdin
+                std::cin.clear();
+                std::cin.ignore();
+                std::cout << "Character limit per word reached, please only input" << MAX_WORD_CHARS << " characters per word.\n";
+                initialCommand[i] = '\0';
+                command[i] = '\0';
+                words[wordNr][wordCharsNr[wordNr]] = '\0';
+                return true;
+            }
             // (so that the number of characters taken doesn't go over the size limit (COMM_SIZE), and thus, cause an error)
             if (i >= COMM_SIZE) // leaves room for the \0 character as the last character
             {
@@ -157,26 +214,61 @@ bool commandDecrypt()
                 std::cout << "The maximum number of characters you can input is " << COMM_SIZE - 1 << ".\n";
                 initialCommand[i] = '\0';
                 command[i] = '\0';
-                return 1;
+                words[wordNr][wordCharsNr[wordNr]] = '\0';
+                return true;
             }
         }
         cmdlen = i;
+        words[wordNr][wordCharsNr[wordNr]] = '\0';
+        ++wordNr;
         initialCommand[i] = '\0';
         addHistory(initialCommand);
         command[i] = '\0';
     // }
-    // TODO: ADD initialCommand to history
     // if command is empty, just continue
     if (cmdlen == 0)
         return true;
+    // words[wordNr++] = strtok(initialCommand, " ");
     // check if the command for exiting/closing/stopping the terminal
-    if (strcmp(command, "exit") == 0 || strcmp(command, "close") == 0 || strcmp(command, "stop") == 0)
-        return false;
-    else if (strcmp(command, "history") == 0 || strcmp(command, "readh") == 0 || strcmp(command, "cath") == 0)
-        readFile(historyFileName);
-    else if (strcmp(command, "deleteh") == 0 || strcmp(command, "delh") == 0 || strcmp(command, "clearh") == 0)
-        deleteFile(historyFileName);
-    else std::cout << "Command '" << command << "' not found.\n";
+    if (wordNr == 1)
+    {
+        if (strcmp(command, "exit") == 0 || strcmp(command, "close") == 0 || strcmp(command, "stop") == 0)
+            return false;
+        else if (strcmp(command, "history") == 0 || strcmp(command, "readh") == 0 || strcmp(command, "cath") == 0)
+        {
+            readFile(historyFileName);
+            return true;
+        }
+        else if (strcmp(command, "deleteh") == 0 || strcmp(command, "delh") == 0 || strcmp(command, "clearh") == 0)
+        {
+            deleteFile(historyFileName);
+            return true;
+        }
+        else
+        {
+            std::cout << "Command '" << command << "' not found.\n";
+            return true;
+        }
+    }
+    // while (words != NULL)
+    // {
+    //     words[wordNr++] = strtok(NULL, " ");
+    // }
+    // --wordNr;
+
+
+    std::cout << "Word nr: " << wordNr << '\n';
+    std::cout << "Words: " << '\n';
+    for (int k = 0; k < wordNr; ++k)
+        std::cout << "Word " << k << ": " << words[k] << '\n';
+
+        if (strcmp(words[0], "dirname") == 0)
+            dirname(words[0]);
+        else
+        {
+            std::cout << "Command '" << words[0] << "' not found.\n";
+            return true;
+        }
 
     return true;
 }

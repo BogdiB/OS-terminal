@@ -1,3 +1,4 @@
+// If someone tries to read/understand this code, God bless your soul, I'm sorry
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -9,13 +10,44 @@
 #define MAX_WORDS 20
 #define MAX_WORD_CHARS 51 // last char is for \0
 
-char historyFileName[] = "history.txt", currentPath[PATH_MAX];
+char historyFileName[] = "history.txt", currentPath[PATH_MAX], words[MAX_WORDS][MAX_WORD_CHARS];
 short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
 // int currentHistoryFileLine, endHistoryFileLine = 0; // 0 for these values means that it doesn't exist
 
-void dirname(char *command)
+void dirname() // uses words variable
 {
     std::cout << "Dirname called.\n";
+    // for (int i = 1; i < wordNr; ++i)
+    // {
+    //     // do what it's supposed to do
+    //     ;
+    // }
+}
+
+void help()
+{
+    // commands and things I've implemented
+    std::cout << "\n";
+    std::cout << "  Command line interpreter\n";
+    std::cout << "\n";
+    std::cout << "  One word commands (some can be called with multiple names, the names are separated by a '\\'):\n";
+    std::cout << "      help - outputs this\n";
+    std::cout << "      version - outputs the interpreter version number and the name of the author\n";
+    std::cout << "      exit / close / stop - stops the interpreter\n";
+    std::cout << "      history / readh / cath - outputs the whole history file\n";
+    std::cout << "      deleteh / delh / clearh - deletes the history file\n";
+    std::cout << "  Multiple word commands:\n";
+    std::cout << "      dirname - strips the last component of the file name(s)\n";
+    std::cout << "\n";
+}
+
+void version()
+{
+    // version info and author and whatever other "relevant information" I can think of
+    std::cout << "\n";
+    std::cout << "  Version: 1.0\n";
+    std::cout << "  Author: Bogdan Birseuan\n";
+    std::cout << "\n";
 }
 
 void deleteFile(char fileName[])
@@ -56,7 +88,7 @@ bool commandDecrypt()
     // std::cin.clear();
     // std::cin.ignore();
 
-    char initialCommand[COMM_SIZE], command[COMM_SIZE], c, words[MAX_WORDS][MAX_WORD_CHARS]/*, AC[3]*/;
+    char initialCommand[COMM_SIZE], command[COMM_SIZE], c/*, AC[3]*/;
     short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
     short i = 0, cmdlen;
 
@@ -228,10 +260,10 @@ bool commandDecrypt()
     // if command is empty, just continue
     if (cmdlen == 0)
         return true;
-    // words[wordNr++] = strtok(initialCommand, " ");
-    // check if the command for exiting/closing/stopping the terminal
     if (wordNr == 1)
     {
+        // add "errors" when using the multi-word commands but only one word is present
+        // add errors to every function, because each one must return a value
         if (strcmp(command, "exit") == 0 || strcmp(command, "close") == 0 || strcmp(command, "stop") == 0)
             return false;
         else if (strcmp(command, "history") == 0 || strcmp(command, "readh") == 0 || strcmp(command, "cath") == 0)
@@ -244,9 +276,24 @@ bool commandDecrypt()
             deleteFile(historyFileName);
             return true;
         }
+        else if (strcmp(command, "help") == 0)
+        {
+            help();
+            return true;
+        }
+        else if (strcmp(command, "version") == 0)
+        {
+            version();
+            return true;
+        }
+        else if (strcmp(command, "dirname") == 0)
+        {
+            std::cout << "Wrong command execution: dirname <ARG> {<ARG>, <ARG>, ...}.\n    ARG - the path\n";
+            return true;
+        }
         else
         {
-            std::cout << "Command '" << command << "' not found.\n";
+            std::cout << "Command '" << command << "' not found. Type 'help' to view commands.\n";
             return true;
         }
     }
@@ -256,19 +303,17 @@ bool commandDecrypt()
     // }
     // --wordNr;
 
-
+    // delete from here
     std::cout << "Word nr: " << wordNr << '\n';
     std::cout << "Words: " << '\n';
     for (int k = 0; k < wordNr; ++k)
         std::cout << "Word " << k << ": " << words[k] << '\n';
+    // to here
 
-        if (strcmp(words[0], "dirname") == 0)
-            dirname(words[0]);
-        else
-        {
-            std::cout << "Command '" << words[0] << "' not found.\n";
-            return true;
-        }
+    if (strcmp(words[0], "dirname") == 0)
+        dirname();
+    else
+        std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
 
     return true;
 }
@@ -283,19 +328,33 @@ int main(int argc, char **argv)
     // tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
     
     // this whole part of the code is just for the main messages, pretty much everything important happens in commandDecrypt()
-    std::cout << "\n--Welcome to my terminal!--\n\n";
-    do
+    std::cout << "\n--Welcome to my command line interpreter!--\n\n";
+    if (argc == 2 && (argv[1] != "1" || argv[1] != "true"))
     {
-        // getcwd returns the current path
-        if (getcwd(currentPath, sizeof(currentPath)) == NULL)
+        do
         {
-            std::cout << "Error getting the current path.\n";
-            std::cout << "\n\n--Thank you for using this terminal!--\n\n";
-            return 1;
-        }
-        std::cout << "<" << currentPath << "> ";
-    }while(commandDecrypt());
-    std::cout << "\n--Thank you for using this terminal!--\n\n";
+            std::cout << "<user> ";
+        }while(commandDecrypt());
+    }
+    else if (argc == 2 && (argv[1] != "0" || argv[1] != "false"))
+    {
+        std::cout << "Execution: exec <ARG>\n   exec - executable name\n    <ARG> - optional bool (0/1 or true/false) argument, which if true (1), enables user anonymity by switching the output to <user> when waiting user input, instead of <{currentPath}>";
+    }
+    else
+    {
+        do
+        {
+            // getcwd returns the current path
+            if (getcwd(currentPath, sizeof(currentPath)) == NULL)
+            {
+                std::cout << "Error getting the current path.\n";
+                std::cout << "\n\n--Thank you for using this interpreter!--\n\n";
+                return 1;
+            }
+            std::cout << "<" << currentPath << "> ";
+        }while(commandDecrypt());
+    }
+    std::cout << "\n--Thank you for using this interpreter!--\n\n";
 
     return 0;
 }

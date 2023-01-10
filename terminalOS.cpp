@@ -2,7 +2,8 @@
 #include <fstream>
 #include <cstring>
 #include <unistd.h>
-#include <termios.h>
+// #include <termios.h>
+// #include <readline.h> // search this on google for arrow things
 #define PATH_MAX 4096
 #define COMM_SIZE 100
 
@@ -48,20 +49,59 @@ bool commandDecrypt()
     // std::cin.clear();
     // std::cin.ignore();
 
-    char initialCommand[COMM_SIZE], command[COMM_SIZE], c, AC[3];
+    char initialCommand[COMM_SIZE], command[COMM_SIZE], c/*AC[3]*/;
     short i = 0, cmdlen;
 
-    AC[0] = std::cin.peek();
-    // AC[1] = std::cin.peek();
-    // AC[2] = std::cin.peek();
-    // if (AC[0] == 27 && AC[1] == 91)
-    if (AC[0] == 'A')
-    {
-        // std::cout << "\x1b[2K\r";
-        std::cout << "\b \b";
-        std::cin.clear();
-        std::cin.ignore();
-    }
+    // TODO: if I touch this again before I finish the commands beat me
+    // AC[0] = std::cin.peek();
+    // // if (AC[0] == 27 && AC[1] == 91)
+    // if (AC[0] == 27)
+    // {
+    //     AC[0] = getc(stdin);
+    //     AC[1] = std::cin.peek();
+    //     if (AC[1] == 91)
+    //     {
+    //         AC[1] = getc(stdin);
+    //         AC[2] = getc(stdin);
+    //         if (AC[2] == 65) // A in ascii, up arrow
+    //         {
+    //             if (getcwd(currentPath, sizeof(currentPath)) == NULL)
+    //             {
+    //                 std::cout << "Error getting the current path.\n";
+    //                 std::cout << "\n\n--Thank you for using this terminal!--\n\n";
+    //                 return 0;
+    //             }
+    //             std::cout << "\x1bM<" << currentPath << ">  \x1b[K";
+    //         }
+    //         else if (AC[2] == 66) // B in ascii, down arrow
+    //         {
+    //             std::cout << "\x9bK\r";
+    //         }
+    //         else
+    //         {
+    //             std::cout << "Unsuported behaviour.\n";
+    //             std::cin.clear();
+    //             std::cin.ignore();
+    //             return true;
+    //         }
+    //     }
+    //     else if ((AC[1] = getc(stdin)) == 94 && (AC[2] = getc(stdin)) == 63)
+    //     {
+    //         // backspace character
+    //         std::cout << "\x1b[#D";
+    //     }
+    //     else
+    //         {
+    //             std::cout << "Unsuported behaviour.\n";
+    //             std::cin.clear();
+    //             std::cin.ignore();
+    //             return true;
+    //         }
+    //     // std::cout << "\x1b[2K\r";
+    //     // std::cout << "\b \b";
+    //     std::cin.clear();
+    //     std::cin.ignore();
+    // }
     // if (strcmp())
     //     ;
     // checking for arrow keys
@@ -143,16 +183,21 @@ bool commandDecrypt()
 
 int main(int argc, char **argv)
 {
-
+    // // sets stdin to non-canonical input mode, so I can read things without end of line or EOF
+    // struct termios old_tio, new_tio;
+    // tcgetattr(STDIN_FILENO, &old_tio);
+    // new_tio = old_tio;
+    // new_tio.c_lflag &= (~ICANON);
+    // tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+    
     // this whole part of the code is just for the main messages, pretty much everything important happens in commandDecrypt()
-
     std::cout << "\n--Welcome to my terminal!--\n\n";
     do
     {
         // getcwd returns the current path
         if (getcwd(currentPath, sizeof(currentPath)) == NULL)
         {
-            perror("Error getting the current path.\n");
+            std::cout << "Error getting the current path.\n";
             std::cout << "\n\n--Thank you for using this terminal!--\n\n";
             return 1;
         }

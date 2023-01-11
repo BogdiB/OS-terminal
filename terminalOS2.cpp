@@ -14,19 +14,23 @@
 #define COLOR_SUCCESS "\a\033[0;32;1m" // makes font green
 #define COLOR_RESET "\033[0m" //resets font color
 
-char historyFileName[] = "history.txt";
+char historyFileName[] = "history.txt"; // this is global just so I can change the name easier
 char words[MAX_WORDS][MAX_WORD_CHARS];
 short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
 short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
 
 void dirname() // uses words variable
 {
-    std::cout << "Dirname called.\n";
-    // for (int i = 1; i < wordNr; ++i)
-    // {
-    //     // do what it's supposed to do
-    //     ;
-    // }
+    if (strcmp(words[1], ">") == 0)
+    {
+        std::cout << COLOR_ERROR << "Redirect used with no argument given.\ndirname <ARG> {<ARG>, ...}\n" << COLOR_RESET;
+        return;
+    }
+    for (int i = 1; i < wordNr; ++i)
+    {
+        for (short j = 0; j <= wordCharsNr[wordNr]; ++j) // wordCharsNr represents indexes, that's why it's "<=" instead of just "<"
+            ;
+    }
 }
 
 void help()
@@ -39,10 +43,15 @@ void help()
     std::cout << "      help - outputs this\n";
     std::cout << "      version - outputs the interpreter version number and the name of the author\n";
     std::cout << "      exit / close / stop - stops the interpreter\n";
-    std::cout << "      history / readh / cath - outputs the whole history file\n";
-    std::cout << "      deleteh / delh / clearh - deletes the history file\n";
+    // std::cout << "      history / readh / cath - outputs the whole history file\n";
+    // std::cout << "      deleteh / delh / clearh - deletes the history file\n";
     std::cout << "  Multiple word commands:\n";
-    std::cout << "      dirname - strips the last component of the file name(s)\n";
+    std::cout << "      dirname <ARG> {<ARG>, ...} - strips the last component of the file name(s)\n";
+    std::cout << "  Legend:\n";
+    std::cout << "      <-> - flag\n";
+    std::cout << "      <ARG> - argument that MUST be given\n";
+    std::cout << "      {<ARG>} - optional argument (only one accepted)\n";
+    std::cout << "      {<ARG>, ...} - optional argument(s)\n";
     std::cout << "\n";
 }
 
@@ -81,13 +90,13 @@ bool commandDecrypt(char initialCommand[])
             words[wordNr][wordCharsNr[wordNr++]] = '\0';
         if (wordNr >= MAX_WORDS) // max is 19 when comparing, not 20, because it starts from 0
         {
-            std::cout << COLOR_ERROR << "Word limit per command reached, please only input" << MAX_WORDS << " words per command.\n" << COLOR_RESET;
+            std::cout << COLOR_ERROR << "Word limit per command reached, please only input " << MAX_WORDS << " words per command.\n" << COLOR_RESET;
             words[wordNr][wordCharsNr[wordNr]] = '\0';
             return true;
         }
         if (wordCharsNr[wordNr] >= MAX_WORD_CHARS)
         {
-            std::cout << COLOR_ERROR << "Character limit per word reached, please only input" << MAX_WORD_CHARS << " characters per word.\n" << COLOR_RESET;
+            std::cout << COLOR_ERROR << "Character limit per word reached, please only input " << MAX_WORD_CHARS << " characters per word.\n" << COLOR_RESET;
             words[wordNr][wordCharsNr[wordNr]] = '\0';
             return true;
         }

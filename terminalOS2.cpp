@@ -4,16 +4,20 @@
 #include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+
 #define PATH_MAX 1024 // used to be 4096, because that is the upper limit for paths, but that is too much memory used for not much benefit
-#define COMM_SIZE 101 // last char is for \0
 #define MAX_WORDS 20
 #define MAX_WORD_CHARS 51 // last char is for \0
+
 #define COLOR_PROMPT "\033[0;92;1m" // prompt color - makes font bright green
 #define COLOR_ERROR "\a\033[0;31;1m" // makes font red
 #define COLOR_SUCCESS "\a\033[0;32;1m" // makes font green
 #define COLOR_RESET "\033[0m" //resets font color
 
 char historyFileName[] = "history.txt";
+char words[MAX_WORDS][MAX_WORD_CHARS];
+short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
+short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
 
 void dirname() // uses words variable
 {
@@ -46,7 +50,7 @@ void version()
 {
     // version info and author and whatever other "relevant information" I can think of
     std::cout << "\n";
-    std::cout << "  Version: 1.0\n";
+    std::cout << "  Version: 2.0\n";
     std::cout << "  Author: Bogdan Birseuan\n";
     std::cout << "\n";
 }
@@ -62,9 +66,86 @@ void version()
 //     history.close();
 // }
 
-bool commandDecrypt(char command[])
+bool commandDecrypt(char initialCommand[])
 {
-    std::cout << "Command decrypt reached.\n";
+    // clearing wordNr and wordCharsNr so that they don't remain the same from the last command and mess things up
+    wordNr = 0;
+    for (short i = 0; i < MAX_WORDS; ++i)
+        wordCharsNr[i] = 0;
+    // splitting the initial command on spaces in the variable words
+    for (short i = 0; i < strlen(initialCommand); ++i)
+    {
+        if (initialCommand[i] != ' ')
+            words[wordNr][wordCharsNr[wordNr]++] = initialCommand[i];
+        else
+            words[wordNr][wordCharsNr[wordNr++]] = '\0';
+        if (wordNr >= MAX_WORDS) // max is 19 when comparing, not 20, because it starts from 0
+        {
+            std::cout << COLOR_ERROR << "Word limit per command reached, please only input" << MAX_WORDS << " words per command.\n" << COLOR_RESET;
+            words[wordNr][wordCharsNr[wordNr]] = '\0';
+            return true;
+        }
+        if (wordCharsNr[wordNr] >= MAX_WORD_CHARS)
+        {
+            std::cout << COLOR_ERROR << "Character limit per word reached, please only input" << MAX_WORD_CHARS << " characters per word.\n" << COLOR_RESET;
+            words[wordNr][wordCharsNr[wordNr]] = '\0';
+            return true;
+        }
+    }
+    words[wordNr][wordCharsNr[wordNr++]] = '\0';
+
+    if (wordNr == 1)
+    {
+        // add "errors" when using the multi-word commands but only one word is present
+        // add errors to every function, because each one must return a value
+        if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "close") == 0 || strcmp(words[0], "stop") == 0)
+            return false;
+        // else if (strcmp(words[0], "history") == 0 || strcmp(words[0], "readh") == 0 || strcmp(words[0], "cath") == 0)
+        // {
+        //     readFile(historyFileName);
+        //     return true;
+        // }
+        // else if (strcmp(words[0], "deleteh") == 0 || strcmp(words[0], "delh") == 0 || strcmp(words[0], "clearh") == 0)
+        // {
+        //     deleteFile(historyFileName);
+        //     return true;
+        // }
+        else if (strcmp(words[0], "help") == 0)
+        {
+            help();
+            return true;
+        }
+        else if (strcmp(words[0], "version") == 0)
+        {
+            version();
+            return true;
+        }
+        else if (strcmp(words[0], "dirname") == 0)
+        {
+            std::cout << COLOR_ERROR << "Wrong command execution: dirname <ARG> {<ARG>, <ARG>, ...}.\n    ARG - the path\n" << COLOR_RESET;
+            return true;
+        }
+        else
+        {
+            std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
+            return true;
+        }
+    }
+
+    // just for testing (delete this too)
+    // delete from here
+    std::cout << "Word nr: " << wordNr << '\n';
+    std::cout << "Words: " << '\n';
+    for (int i = 0; i < wordNr; ++i)
+        std::cout << "Word " << i << ": " << words[i] << '\n';
+    // to here
+
+    // multiple word commands
+    if (strcmp(words[0], "dirname") == 0)
+        dirname();
+    else
+        std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
+
     return 1;
 }
 
@@ -86,9 +167,13 @@ int main(int argc, char *argv[])
             if (strlen(command) > 0)
             {
                 add_history(command);
+                if (commandDecrypt(command) == false)
+                {
+                    free(command);
+                    std::cout << "\n--Thank you for using this interpreter!--\n\n";
+                    return 0;
+                }
             }
-            std::cout << "Command is: '" << command << "'.\n";
-            commandDecrypt(command);
             // readline will malloc command each time it is called
             free(command);
         }
@@ -100,7 +185,7 @@ int main(int argc, char *argv[])
         // getcwd returns the current path
         if (getcwd(currentPath, sizeof(currentPath)) == NULL)
         {
-            std::cout << "Error getting the current path.\n";
+            std::cout << COLOR_ERROR << "Error getting the current path.\n" << COLOR_RESET;
             std::cout << "\n\n--Thank you for using this interpreter!--\n\n";
             return 1;
         }
@@ -114,15 +199,19 @@ int main(int argc, char *argv[])
             if (strlen(command) > 0)
             {
                 add_history(command);
+                if (commandDecrypt(command) == false)
+                {
+                    free(command);
+                    std::cout << "\n--Thank you for using this interpreter!--\n\n";
+                    return 0;
+                }
             }
-            std::cout << "Command is: '" << command << "'.\n";
-            commandDecrypt(command);
             // readline will malloc command each time it is called
             free(command);
             // resetting the current path and updating the prompt in case they were changed
             if (getcwd(currentPath, sizeof(currentPath)) == NULL)
             {
-                std::cout << "Error getting the current path.\n";
+                std::cout << COLOR_ERROR << "Error getting the current path.\n" << COLOR_RESET;
                 std::cout << "\n\n--Thank you for using this interpreter!--\n\n";
                 return 1;
             }
@@ -134,11 +223,10 @@ int main(int argc, char *argv[])
             prompt += COLOR_RESET;
         }
     }
-    else 
+    else
     {
-        std::cout << "Execution: exec <ARG>\n   exec - executable name\n    <ARG> - optional bool (0/1 or true/false) argument, which if true (1), enables user anonymity by switching the output to <user> when waiting user input, instead of <{currentPath}>";
+        std::cout << COLOR_ERROR << "Execution: exec <ARG>\n   exec - executable name\n    <ARG> - optional bool (0/1 or true/false) argument, which if true (1), enables user anonymity by switching the output to <user> when waiting user input, instead of <{currentPath}>\n" << COLOR_RESET;
     }
-    std::cout << "\n--Thank you for using this interpreter!--\n\n";
 
     return 0;
 }

@@ -21,14 +21,8 @@ char words[MAX_WORDS][MAX_WORD_CHARS], currentPath[PATH_MAX];
 short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
 short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
 
-void dirname()
+void dirname(char *args[])
 {
-    char *args[20];
-    short i;
-    for (i = 1; i < wordNr; ++i)
-        *(args + i - 1) = words[i];
-    *(args + wordNr - 1) = nullptr;
-
     int id = fork();
     if (id < 0)
     {
@@ -40,15 +34,8 @@ void dirname()
         // child process
         std::string dirpath = currentPath;
         dirpath += "/dirname";
-        
-        // for(int i = 1; i < wordNr; ++i)
-        // {
-        //     std::cout << i << "/" << wordNr - 1 << '\n';
-            if (execvp(dirpath.c_str(), args) == -1)
-                perror("Exec error");
-            /*std::cout << COLOR_ERROR << "Exec error.\n" << COLOR_RESET;*/
-            // std::cout << i << "/" << wordNr << '\n';
-        // }
+        if (execvp(dirpath.c_str(), args) == -1)
+            perror("Exec error");
         exit(0);
     }
     // main process
@@ -125,57 +112,70 @@ bool commandDecrypt(char initialCommand[])
     }
     words[wordNr][wordCharsNr[wordNr++]] = '\0';
 
-    if (wordNr == 1)
+    // add "errors" when using the multi-word commands but only one word is present
+    // add errors to every function, because each one must return a value
+    if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "close") == 0 || strcmp(words[0], "stop") == 0)
+        return false;
+    // else if (strcmp(words[0], "history") == 0 || strcmp(words[0], "readh") == 0 || strcmp(words[0], "cath") == 0)
+    // {
+    //     readFile(historyFileName);
+    //     return true;
+    // }
+    // else if (strcmp(words[0], "deleteh") == 0 || strcmp(words[0], "delh") == 0 || strcmp(words[0], "clearh") == 0)
+    // {
+    //     deleteFile(historyFileName);
+    //     return true;
+    // }
+    else if (strcmp(words[0], "help") == 0)
     {
-        // add "errors" when using the multi-word commands but only one word is present
-        // add errors to every function, because each one must return a value
-        if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "close") == 0 || strcmp(words[0], "stop") == 0)
-            return false;
-        // else if (strcmp(words[0], "history") == 0 || strcmp(words[0], "readh") == 0 || strcmp(words[0], "cath") == 0)
-        // {
-        //     readFile(historyFileName);
-        //     return true;
-        // }
-        // else if (strcmp(words[0], "deleteh") == 0 || strcmp(words[0], "delh") == 0 || strcmp(words[0], "clearh") == 0)
-        // {
-        //     deleteFile(historyFileName);
-        //     return true;
-        // }
-        else if (strcmp(words[0], "help") == 0)
-        {
-            help();
-            return true;
-        }
-        else if (strcmp(words[0], "version") == 0)
-        {
-            version();
-            return true;
-        }
-        else if (strcmp(words[0], "dirname") == 0)
-        {
-            std::cout << COLOR_ERROR << "Wrong command execution: dirname <ARG> {<ARG>, <ARG>, ...}.\n    ARG - the path\n" << COLOR_RESET;
-            return true;
-        }
+        help();
+        return true;
+    }
+    else if (strcmp(words[0], "version") == 0)
+    {
+        version();
+        return true;
+    }
+    else if (strcmp(words[0], "dirname") == 0)
+    {
+        std::cout << COLOR_ERROR << "Wrong command execution: dirname <ARG> {<ARG>, <ARG>, ...}.\n    ARG - the path\n" << COLOR_RESET;
+        return true;
+    }
+    else
+    {
+        // multiple word commands
+        // making args (in this case the arguments have to start from index 1 in args, that's why we give words[0] to args only here, even though it is redundant)
+        char *args[20];
+        for (short i = 0; i < wordNr; ++i)
+            *(args + i) = words[i];
+        *(args + wordNr) = nullptr;
+        // searching which command it is
+        if (strcmp(words[0], "dirname") == 0)
+            dirname(args);
         else
         {
-            std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
-            return true;
+            int id = fork();
+            if (id < 0)
+            {
+                std::cout << COLOR_ERROR << "Error creating a process.\n" << COLOR_RESET;
+                return true;
+            }
+            if (id == 0)
+            {
+                // child process
+                std::string path = "/bin/";
+                path += words[0];
+                if (execvp(path.c_str(), args) == -1)
+                    perror("Exec error");
+                exit(0);
+            }
+            // main process
+            wait(NULL);
         }
     }
 
-    // just for testing (delete this too)
-    // delete from here
-    // std::cout << "Word nr: " << wordNr << '\n';
-    // std::cout << "Words: " << '\n';
-    // for (int i = 0; i < wordNr; ++i)
-    //     std::cout << "Word " << i << ": " << words[i] << '\n';
-    // to here
-
-    // multiple word commands
-    if (strcmp(words[0], "dirname") == 0)
-        dirname();
-    else
-        std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
+    // TODO: FIX THIS SO IT DOESN'T SHOW UP EVERY TIME
+    std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
 
     return 1;
 }

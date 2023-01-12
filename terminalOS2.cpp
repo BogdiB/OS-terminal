@@ -1,9 +1,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstring>
 #include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <sys/wait.h>
 
 #define PATH_MAX 1024 // used to be 4096, because that is the upper limit for paths, but that is too much memory used for not much benefit
 #define MAX_WORDS 20
@@ -15,22 +17,38 @@
 #define COLOR_RESET "\033[0m" //resets font color
 
 char historyFileName[] = "history.txt"; // this is global just so I can change the name easier
-char words[MAX_WORDS][MAX_WORD_CHARS];
+char words[MAX_WORDS][MAX_WORD_CHARS], currentPath[PATH_MAX];
 short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
 short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
 
-void dirname() // uses words variable
+void dirname()
 {
-    if (strcmp(words[1], ">") == 0)
+    // char *args[10];
+    // for (short i = 1; i < wordNr; ++i)
+    // {
+    //     // for (short j = 0; j < wordCharsNr[i]; ++j)
+    //     //     args[i][j] = words[i][j];
+    //     strcpy(args[i], words[i]);
+    //     std::cout << args[i] << '\n';
+    // }
+    // args[wordNr] = nullptr;
+    int id = fork();
+    if (id < 0)
     {
-        std::cout << COLOR_ERROR << "Redirect used with no argument given.\ndirname <ARG> {<ARG>, ...}\n" << COLOR_RESET;
+        std::cout << COLOR_ERROR << "Error creating a process.\n" << COLOR_RESET;
         return;
     }
-    for (int i = 1; i < wordNr; ++i)
+    if (id == 0)
     {
-        for (short j = 0; j <= wordCharsNr[wordNr]; ++j) // wordCharsNr represents indexes, that's why it's "<=" instead of just "<"
-            ;
+        // child process
+        std::string dirpath = currentPath;
+        dirpath += "/dirname.cpp";
+        if (execl("dirname", words[1], nullptr) == -1)
+            /*std::cout << COLOR_ERROR << "Exec error.\n" << COLOR_RESET;*/perror("Exec error");
+        exit(0);
     }
+    // main process
+    wait(NULL);
 }
 
 void help()
@@ -45,7 +63,7 @@ void help()
     std::cout << "      exit / close / stop - stops the interpreter\n";
     // std::cout << "      history / readh / cath - outputs the whole history file\n";
     // std::cout << "      deleteh / delh / clearh - deletes the history file\n";
-    std::cout << "  Multiple word commands:\n";
+    std::cout << "  Multiple word commands(re-implemented):\n";
     std::cout << "      dirname <ARG> {<ARG>, ...} - strips the last component of the file name(s)\n";
     std::cout << "  Legend:\n";
     std::cout << "      <-> - flag\n";
@@ -143,10 +161,10 @@ bool commandDecrypt(char initialCommand[])
 
     // just for testing (delete this too)
     // delete from here
-    std::cout << "Word nr: " << wordNr << '\n';
-    std::cout << "Words: " << '\n';
-    for (int i = 0; i < wordNr; ++i)
-        std::cout << "Word " << i << ": " << words[i] << '\n';
+    // std::cout << "Word nr: " << wordNr << '\n';
+    // std::cout << "Words: " << '\n';
+    // for (int i = 0; i < wordNr; ++i)
+    //     std::cout << "Word " << i << ": " << words[i] << '\n';
     // to here
 
     // multiple word commands
@@ -163,6 +181,7 @@ int main(int argc, char *argv[])
     // this whole part of the code is just for the main messages mostly, pretty much everything important happens in commandDecrypt()
     // readline does filename completion by default so we tell readline to just insert the '\t'
     rl_bind_key('\t', rl_insert);
+    system("clear");
     std::cout << "\n--Welcome to my command line interpreter!--\n\n";
     if (argc == 2 && (argv[1] != "1" || argv[1] != "true"))
     {
@@ -189,7 +208,7 @@ int main(int argc, char *argv[])
     }
     else if (argc == 1 || (argc == 2 && (argv[1] != "0" || argv[1] != "false")))
     {
-        char *command, currentPath[PATH_MAX];
+        char *command;
         std::string prompt;
         // getcwd returns the current path
         if (getcwd(currentPath, sizeof(currentPath)) == NULL)

@@ -23,15 +23,12 @@ short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
 
 void dirname()
 {
-    // char *args[10];
-    // for (short i = 1; i < wordNr; ++i)
-    // {
-    //     // for (short j = 0; j < wordCharsNr[i]; ++j)
-    //     //     args[i][j] = words[i][j];
-    //     strcpy(args[i], words[i]);
-    //     std::cout << args[i] << '\n';
-    // }
-    // args[wordNr] = nullptr;
+    char *args[20];
+    short i;
+    for (i = 1; i < wordNr; ++i)
+        *(args + i - 1) = words[i];
+    *(args + wordNr - 1) = nullptr;
+
     int id = fork();
     if (id < 0)
     {
@@ -42,9 +39,16 @@ void dirname()
     {
         // child process
         std::string dirpath = currentPath;
-        dirpath += "/dirname.cpp";
-        if (execl("dirname", words[1], nullptr) == -1)
-            /*std::cout << COLOR_ERROR << "Exec error.\n" << COLOR_RESET;*/perror("Exec error");
+        dirpath += "/dirname";
+        
+        // for(int i = 1; i < wordNr; ++i)
+        // {
+        //     std::cout << i << "/" << wordNr - 1 << '\n';
+            if (execvp(dirpath.c_str(), args) == -1)
+                perror("Exec error");
+            /*std::cout << COLOR_ERROR << "Exec error.\n" << COLOR_RESET;*/
+            // std::cout << i << "/" << wordNr << '\n';
+        // }
         exit(0);
     }
     // main process

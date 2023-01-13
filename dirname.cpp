@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-    // COMPILE EVERY CHANGE
+    // COMPILE EVERY CHANGE IN THE SAME DIRECTORY WITH 'terminalOS2.cpp' with: g++ -o dirname dirname.cpp
     // argv only consists of things after the dirname command in terminalOS2
     // no flags have been assigned for this function recreation
     for (short i = 1; i < argc; ++i)

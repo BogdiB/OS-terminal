@@ -1,10 +1,10 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
+#include <readline/readline.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-
 #include <stdlib.h>
 #include <errno.h>
 #include <libgen.h>
@@ -12,7 +12,26 @@
 #define COLOR_ERROR "\a\033[0;31;1m" // makes font red
 #define COLOR_RESET "\033[0m" //resets font color
 
-char* fD[50];
+bool iFlag = false, rFlag = false, tFlag = false, vFlag = false, hFlag = false, noFlags = true;
+char *fD[50], tDir[30];
+short fDNr = 0;
+
+bool prompt()
+{
+    // prompt for overwriting, if no, then don't copy
+    std::cout << "Overwrite '" << fD[1] << "'?(y/n): ";
+    char yn = getc(stdin);
+    // any other input besides 'y' and 'Y' gets treated as no
+    if (yn == 'y' || yn == 'Y')
+    {
+        std::cin.clear();
+        std::cin.ignore();
+        return true;
+    }
+    std::cin.clear();
+    std::cin.ignore();
+    return false;
+}
 
 void cp_r(char *source, char *dest)
 {
@@ -70,92 +89,95 @@ void cp_r(char *source, char *dest)
     }
 }
 
-int cp_t(char *location, int fdCount)
+int cp_t(char *loc, int fDNr)
 {
-    // target cp
-    for(short i = 0; i < fdCount - 1; ++i)
+    // target cp - almost the same as normal cp
+    for(short i = 0; i < fDNr - 1; ++i)
     {
-        char fileLocation[512], *buffer;
-        int fd1, fd2, length, n;
+        char fLoc[512];
 
-        strcpy(fileLocation,location);
-        strcat(fileLocation,"/");
-        strcat(fileLocation, fD[i]);
+        strcpy(fLoc, loc);
+        strcat(fLoc, "/");
+        strcat(fLoc, fD[i]);
 
-        if((fd1 = open(fD[i], O_RDONLY)) < 0)
+        // opening input/output file error management
+        int fD1, fD2;
+        if((fD1 = open(fD[i], O_RDONLY)) < 0)
         {
             perror("Error opening the input file\n");
             return 1;
         }
-        if((fd2 = open(fileLocation, O_WRONLY | O_CREAT, 0664)) < 0)
+        if((fD2 = open(fLoc, O_WRONLY | O_CREAT, 0664)) < 0)
         {
             perror("Error opening output file\n");
             return 2;
         }
-        length = lseek(fd1, 0, SEEK_END) - lseek(fd1, 0, SEEK_SET);
-        buffer = (char *) malloc(length * sizeof(char));
+
+        int n, length = lseek(fD1, 0, SEEK_END) - lseek(fD1, 0, SEEK_SET);
+        char *buffer = (char *) malloc(length * sizeof(char));
 
         if(buffer == NULL)
         {
-            perror("Error null buffer");
+            perror("Error, null buffer");
             return 3;
         }
-        // reading the file
-        while((n = read(fd1, buffer, length)) > 0)
+        // basic file reading and writing
+        while((n = read(fD1, buffer, length)) > 0)
         {
             buffer[n] = '\0';
-            write(fd2, buffer, length);
+            write(fD2, buffer, length);
         }
         if(n < 0)
         {
             perror("Error reading the file\n");
             return 4;
         }
+
         free(buffer);
-        close(fd1);
-        close(fd2);
+        close(fD1);
+        close(fD2);
     }
 }
 
 int cp()
 {
     // the basic cp functionality
-    int fd1,fd2, n, length;
-    char* buffer;
-
-    if((fd1 = open(fD[0], O_RDONLY)) < 0)
+    // opening input/output file error management
+    int fD1, fD2;
+    if((fD1 = open(fD[0], O_RDONLY)) < 0)
     {
         perror("Error opening the input file\n");
         return 2;
     }
-    if((fd2 = open(fD[1],  O_WRONLY | O_CREAT ,0664)) < 0)
+    if((fD2 = open(fD[1],  O_WRONLY | O_CREAT ,0664)) < 0)
     {
         perror("Error opening the output file\n");
         return 2;
     }
 
-    length = lseek (fd1, 0, SEEK_END) - lseek(fd1, 0, SEEK_SET);
-    buffer = (char *) malloc(length * sizeof(char));
+    int n, length = lseek (fD1, 0, SEEK_END) - lseek(fD1, 0, SEEK_SET); // gets the file length so 
+    char* buffer = (char *) malloc(length * sizeof(char));
 
     if(buffer == NULL)
     {
-        perror("Malloc failed.");
+        perror("Error, null buffer");
         return 3;
     }
     // basic file reading and writing
-    while( (n = read(fd1, buffer, length)) > 0)
+    while( (n = read(fD1, buffer, length)) > 0)
     {
         buffer[n] = '\0';
-        write(fd2,buffer,length);
+        write(fD2,buffer,length);
     }
     if( n < 0)
     {
         perror("Error reading the file\n");
         return 4;
     }
+
     free(buffer);
-    close(fd1);
-    close(fd2);
+    close(fD1);
+    close(fD2);
 }
 
 int main(int argc, char *argv[])
@@ -163,9 +185,8 @@ int main(int argc, char *argv[])
     // COMPILE EVERY CHANGE IN THE SAME DIRECTORY WITH 'terminalOS2.cpp' with: g++ -o cp cp.cpp
     // argv only consists of things after the dirname command in terminalOS2
 
-    // counting the number of file descriptors
-    short fDNr = 0;
-    for(short i = 1; i < argc; ++i)
+    // managing file descriptors
+    for(short i = 0; i < argc; ++i)
         for(short j = 0; j < strlen(argv[i]); ++j)
         {
             if(argv[i][j] == '-')
@@ -175,8 +196,6 @@ int main(int argc, char *argv[])
         }
 
     short c;
-    bool iFlag = false, rFlag = false, tFlag = false, vFlag = false, hFlag = false, noFlags = true;
-    char tDir[30];
     // assinging true to the flags given in the arguments
     while((c = getopt(argc, argv, "irRt:v")) != -1)
     {
@@ -211,31 +230,22 @@ int main(int argc, char *argv[])
                 vFlag = 1;
                 break;
             default:
-                std::cout << COLOR_ERROR << "Flag '" << c << "' not found." << COLOR_RESET;
+                std::cout << COLOR_ERROR << "Flag '" << c << "' not found.\n" << COLOR_RESET;
                 break;
         }
     }
     // checking the flags after assignment
-    if (iFlag == true)
-    {
-        // prompt for overwriting, if no, then don't copy
-        std::cout << "Overwrite '" << fD[1] << "'?(y/n): ";
-        char yn = getc(stdin);
-        // any other input besides 'y' and 'Y' gets treated as no
-        if (yn == 'y' || yn == 'Y');
+    if (iFlag && prompt())
             cp();
-        std::cin.clear();
-        std::cin.ignore();
-    }
-    else if (vFlag == true)
+    else if (vFlag)
     {
         // "explaining" what it's doing
         std::cout << "'" << fD[0] << "' -> '" << fD[1] << "'\n";
         cp();
     }
-    else if (tFlag == true)
+    else if (tFlag)
         cp_t(tDir, fDNr);
-    else if (rFlag == true)
+    else if (rFlag)
     {
         DIR *dir;
         struct dirent *ent;
@@ -259,7 +269,7 @@ int main(int argc, char *argv[])
         }
         cp_r(fD[0], fD[1]);
     }
-    else if (noFlags = true)
+    else if (noFlags)
         cp();
     
     return 0;

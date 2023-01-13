@@ -129,16 +129,6 @@ void version()
     std::cout << "\n";
 }
 
-// void addHistory(char command[])
-// {
-//     // if the command is just an enter then don't add to the history
-//     if (command[0] == '\0')
-//         return;
-//     std::ofstream history(historyFileName, std::ios::app); // open the history file in append mode
-//     history << command << '\n';
-//     history.close();
-// }
-
 bool commandDecrypt(char initialCommand[])
 {
     // clearing wordNr and wordCharsNr so that they don't remain the same from the last command and mess things up
@@ -167,8 +157,6 @@ bool commandDecrypt(char initialCommand[])
     }
     words[wordNr][wordCharsNr[wordNr++]] = '\0';
 
-    // add "errors" when using the multi-word commands but only one word is present
-    // add errors to every function, because each one must return a value
     bool ok = false;
     if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "close") == 0 || strcmp(words[0], "stop") == 0)
         return false;
@@ -200,6 +188,7 @@ bool commandDecrypt(char initialCommand[])
         for (short i = 0; i < wordNr; ++i)
             *(args + i) = words[i];
         *(args + wordNr) = nullptr;
+        
         // searching which command it is
         if (strcmp(words[0], "cp") == 0)
         {

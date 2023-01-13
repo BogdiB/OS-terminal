@@ -12,7 +12,7 @@
 #define COLOR_ERROR "\a\033[0;31;1m" // makes font red
 #define COLOR_RESET "\033[0m" //resets font color
 
-bool iFlag = false, rFlag = false, tFlag = false, vFlag = false, hFlag = false, noFlags = true;
+bool iFlag = false, rFlag = false, tFlag = false, vFlag = false, hFlag = false;
 char *fD[50], tDir[30];
 short fDNr = 0;
 
@@ -33,7 +33,7 @@ bool prompt()
     return false;
 }
 
-void cp_r(char *source, char *dest)
+void cpr(char *source, char *dest)
 {
     // recursive cp
     // remember to close dir, delete this comment after
@@ -68,7 +68,7 @@ void cp_r(char *source, char *dest)
             {
                 // if it's a directory, do recursive cp
                 if (S_ISDIR(st.st_mode))
-                    cp_r(sourcePath, destPath);
+                    cpr(sourcePath, destPath);
                 else
                 {
                     // copying file
@@ -89,7 +89,7 @@ void cp_r(char *source, char *dest)
     }
 }
 
-int cp_t(char *loc, int fDNr)
+int cpt(char *loc)
 {
     // target cp - almost the same as normal cp
     for(short i = 0; i < fDNr - 1; ++i)
@@ -185,14 +185,12 @@ int main(int argc, char *argv[])
     // COMPILE EVERY CHANGE IN THE SAME DIRECTORY WITH 'terminalOS2.cpp' with: g++ -o cp cp.cpp
     // argv only consists of things after the dirname command in terminalOS2
 
-    // managing file descriptors
-    for(short i = 0; i < argc; ++i)
-        for(short j = 0; j < strlen(argv[i]); ++j)
+    // keeping everything except argv[0] and flags in fD for later use
+    for(short i = 1; i < argc; ++i)
+        if (argv[i][0] != '-') // if the first character in this argument is '-', that means it's a flag, so we skip over it
         {
-            if(argv[i][j] == '-')
-                break;
-            else if(j == strlen(argv[i]) - 1)
-                fD[fDNr++] = argv[i];
+            *(fD + i) = argv[i];
+            ++fDNr;
         }
 
     short c;
@@ -203,22 +201,18 @@ int main(int argc, char *argv[])
         {
             case 'i':
                 // shows prompt
-                noFlags = false;
                 iFlag = 1;
                 break;
             case 'r':
                 // recursive
-                noFlags = false;
                 rFlag = 1;
                 break;
             case 'R':
                 // same as 'r'
-                noFlags = false;
                 rFlag = 1;
                 break;
             case 't':
                 // target directory, copies all args in the directory
-                noFlags = false;
                 tFlag = 1;
                 strcpy(tDir, optarg);
                 // delete the cout after testing
@@ -226,7 +220,6 @@ int main(int argc, char *argv[])
                 break;
             case 'v':
                 // verbose - "explains" what it's doing
-                noFlags = false;
                 vFlag = 1;
                 break;
             default:
@@ -235,16 +228,16 @@ int main(int argc, char *argv[])
         }
     }
     // checking the flags after assignment
-    if (iFlag && prompt())
-            cp();
-    else if (vFlag)
+    if (iFlag)
+        if (!prompt())
+            return 0;
+    if (vFlag)
     {
         // "explaining" what it's doing
         std::cout << "'" << fD[0] << "' -> '" << fD[1] << "'\n";
-        cp();
     }
-    else if (tFlag)
-        cp_t(tDir, fDNr);
+    if (tFlag)
+        cpt(tDir);
     else if (rFlag)
     {
         DIR *dir;
@@ -267,9 +260,9 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        cp_r(fD[0], fD[1]);
+        cpr(fD[0], fD[1]);
     }
-    else if (noFlags)
+    else
         cp();
     
     return 0;

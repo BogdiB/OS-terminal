@@ -37,9 +37,9 @@ bool prompt()
 
 void mvS()
 {
-    // the extension from the -S flag should be the first descriptor (fD[0])
-    // not removing the source file because in the command requirement is that this command has -b flag included, which means leave a backup (as far as I could find)
-    char path[PATH_MAX], cPath[PATH_MAX]; // path is destination, cPath is source
+    // the extension from the -S flag should be the first descriptor (fD[0]) // strcat(path, fD[0]); // adding extension
+    // destination will be appended
+    char path[PATH_MAX], cPath[PATH_MAX], aPath[PATH_MAX]; // path is destination, cPath is source, aPath is appended
     // the moving
     if (fDNr > 2)
     {
@@ -64,7 +64,7 @@ void mvS()
             strcat(path, fD[fDNr - 1]);
         }
 
-        for (short i = 0; i < fDNr - 1; ++i) // fDNr - 1 because the last one will be the path  // fD[i], fD[fDNr - 1]
+        for (short i = 1; i < fDNr - 1; ++i) // 1 because 0 is extension, fDNr - 1 because the last one will be the path  // fD[i], fD[fDNr - 1]
         {
             strcpy(cPath, currentPath);
             // getting the source path
@@ -85,12 +85,38 @@ void mvS()
                 strcat(cPath, fD[i]);
             }
 
-            std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
-            std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
-            ofs << ifs.rdbuf();
-            ifs.close();
-            ofs.close();
-            // not removing the source file because in the command requirement is that this command has -b flag included, which means leave a backup (as far as I could find)
+            std::ifstream existF(path); // path is destination
+            bool exists = existF.good();
+            existF.close();
+            // if destination exists
+            if (exists)
+            {
+                strcpy(aPath, path);
+                strcat(aPath, fD[0]); // appends extension
+                // rename destination(path)(source for below thing)
+                std::ifstream ifs(path, std::ios::in | std::ios::binary); // source
+                std::ofstream ofs(aPath, std::ios::out | std::ios::binary); // destination
+                ofs << ifs.rdbuf();
+                ifs.close();
+                ofs.close();
+                // path and aPath are identical except for their names
+                // replace path with cPath
+                std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+                std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
+                ofs << ifs.rdbuf();
+                ifs.close();
+                ofs.close();
+                remove(cPath);
+            }
+            else
+            {
+                std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+                std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
+                ofs << ifs.rdbuf();
+                ifs.close();
+                ofs.close();
+                remove(cPath);
+            }
         }
             // if (rename(fD[i], fD[fDNr - 1]) != 0) // renames file, and moves it if need be
             //     perror("Error renaming/moving file");
@@ -98,9 +124,28 @@ void mvS()
     else
     {
         // source, destination
-        // fD[0], fD[1]
+        // fD[1], fD[2]
         // getting the destination directory path
         strcpy(path, currentPath);
+        if (fD[2][0] == '.')
+        {
+            // getting rid of the '.'
+            *(fD[2]) = *(fD[2] + 1);
+            // for (short i = 0; i < strlen(fD[1]) - 1; ++i)
+                // fD[2][i] = fD[2][i + 1];
+            if (fD[2][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[2]);
+        }
+        else
+        {
+            if (fD[2][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[2]);
+        }
+
+        // getting the source directory path
+        strcpy(cPath, currentPath);
         if (fD[1][0] == '.')
         {
             // getting rid of the '.'
@@ -108,41 +153,54 @@ void mvS()
             // for (short i = 0; i < strlen(fD[1]) - 1; ++i)
                 // fD[1][i] = fD[1][i + 1];
             if (fD[1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[1]);
+                strcat(cPath, "/");
+            strcat(cPath, fD[1]);
         }
         else
         {
             if (fD[1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[1]);
+                strcat(cPath, "/");
+            strcat(cPath, fD[1]);
         }
 
-        // getting the source directory path
-        strcpy(cPath, currentPath);
-        if (fD[0][0] == '.')
+        std::ifstream existF(path); // path is destination
+        bool exists = existF.good();
+        existF.close();
+        // if destination exists
+        if (exists)
         {
-            // getting rid of the '.'
-            *(fD[0]) = *(fD[0] + 1);
-            // for (short i = 0; i < strlen(fD[0]) - 1; ++i)
-                // fD[0][i] = fD[0][i + 1];
-            if (fD[0][0] != '/')
-                strcat(cPath, "/");
-            strcat(cPath, fD[0]);
+            strcpy(aPath, path);
+            strcat(aPath, fD[0]); // appends extension
+            // rename destination(path)(source for below thing)
+            std::ifstream ifs(path, std::ios::in | std::ios::binary); // source
+            std::ofstream ofs(aPath, std::ios::out | std::ios::binary); // destination
+            ofs << ifs.rdbuf();
+            ifs.close();
+            ofs.close();
+            // path and aPath are identical except for their names
+            // replace path with cPath
+            std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+            std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
+            ofs << ifs.rdbuf();
+            ifs.close();
+            ofs.close();
+            remove(cPath);
         }
         else
         {
-            if (fD[0][0] != '/')
-                strcat(cPath, "/");
-            strcat(cPath, fD[0]);
+            std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+            std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
+            ofs << ifs.rdbuf();
+            ifs.close();
+            ofs.close();
+            remove(cPath);
         }
-
-        std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
-        std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
-        ofs << ifs.rdbuf();
-        ifs.close();
-        ofs.close();
-        // not removing the source file because in the command requirement is that this command has -b flag included, which means leave a backup (as far as I could find)
+        // std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+        // std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
+        // ofs << ifs.rdbuf();
+        // ifs.close();
+        // ofs.close();
+        // remove(cPath);
     }
 }
 

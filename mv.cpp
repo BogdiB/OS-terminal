@@ -3,7 +3,6 @@
 #include <cstring>
 
 #define COLOR_ERROR "\a\033[0;31;1m" // makes font red
-#define COLOR_SUCCESS "\a\033[0;32;1m" // makes font green
 #define COLOR_RESET "\033[0m" //resets font color
 
 int main(int argc, char *argv[])

@@ -13,10 +13,10 @@
 
 #define COLOR_PROMPT "\033[0;92;1m" // prompt color - makes font bright green
 #define COLOR_ERROR "\a\033[0;31;1m" // makes font red
-#define COLOR_SUCCESS "\a\033[0;32;1m" // makes font green
+#define COLOR_SUCCESS "\a\033[0;32;1m" // makes font green - find somewhere to use it because why not
 #define COLOR_RESET "\033[0m" //resets font color
 
-char historyFileName[] = "history.txt"; // this is global just so I can change the name easier
+char historyFileName[] = "history.txt"; // this is global just so I can change the name easier - forgot to re-add 
 char words[MAX_WORDS][MAX_WORD_CHARS], currentPath[PATH_MAX];
 short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
 short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0

@@ -5,45 +5,35 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+#include <stdlib.h>
+#include <errno.h>
+#include <libgen.h>
+
 #define COLOR_ERROR "\a\033[0;31;1m" // makes font red
-#define COLOR_SUCCESS "\a\033[0;32;1m" // makes font green
 #define COLOR_RESET "\033[0m" //resets font color
 
 char* fD[50];
 
-void copyFile(const char *source, const char *destination)
+void cp_r(char *source, char *dest)
 {
-    FILE *src_fp = fopen(source, "rb");
-    FILE *dst_fp = fopen(destination, "wb");
-    char buffer[4096];
-    size_t bytes_read;
-
-    while ((bytes_read = fread(buffer, 1, sizeof buffer, src_fp)) > 0)
-        fwrite(buffer, 1, bytes_read, dst_fp);
-
-    fclose(src_fp);
-    fclose(dst_fp);
-}
-
-void cp_r(char *source, char *destination)
-{
+    // recursive cp
+    // remember to close dir, delete this comment after
     DIR *dir;
     struct dirent *ent;
     struct stat st;
-    char srcPath[FILENAME_MAX];
-    char dstPath[FILENAME_MAX];
+    char sourcePath[FILENAME_MAX];
+    char destPath[FILENAME_MAX];
 
     if ((dir = opendir(source)) != NULL)
     {
         // create the destination directory
-        if (mkdir(destination, 0777) != 0)
-        {
+        // if the error isn't that it already exists, output the error
+        if (mkdir(dest, 0777) != 0)
             if (errno != EEXIST)
             {
                 perror("Error at making the directory");
                 exit(0);
             }
-        }
 
         // copying files and subdirectories
         while ((ent = readdir(dir)) != NULL)
@@ -52,27 +42,41 @@ void cp_r(char *source, char *destination)
             if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
                 continue;
 
-            snprintf(srcPath, FILENAME_MAX, "%s/%s", source, ent->d_name);
-            snprintf(dstPath, FILENAME_MAX, "%s/%s", destination, ent->d_name);
+            snprintf(sourcePath, FILENAME_MAX, "%s/%s", source, ent->d_name);
+            snprintf(destPath, FILENAME_MAX, "%s/%s", dest, ent->d_name);
 
-            if (stat(srcPath, &st) == 0)
+            if (stat(sourcePath, &st) == 0)
             {
+                // if it's a directory, do recursive cp
                 if (S_ISDIR(st.st_mode))
-                    cp_r(srcPath, dstPath);
+                    cp_r(sourcePath, destPath);
                 else
-                    copyFile(srcPath, dstPath);
+                {
+                    // copying file
+                    FILE *sourceF = fopen(sourcePath, "rb");
+                    FILE *destF = fopen(destPath, "wb");
+                    size_t bytesRead;
+                    char buffer[4096];
+
+                    while ((bytesRead = fread(buffer, 1, sizeof buffer, sourceF)) > 0)
+                        fwrite(buffer, 1, bytesRead, destF);
+
+                    fclose(sourceF);
+                    fclose(destF);
+                }
             }
         }
         closedir(dir);
     }
 }
 
-int cp_t(char* location,int fdCount)
+int cp_t(char *location, int fdCount)
 {
+    // target cp
     for(short i = 0; i < fdCount - 1; ++i)
     {
-        int fd1, fd2, length, n;
         char fileLocation[512], *buffer;
+        int fd1, fd2, length, n;
 
         strcpy(fileLocation,location);
         strcat(fileLocation,"/");
@@ -115,6 +119,7 @@ int cp_t(char* location,int fdCount)
 
 int cp()
 {
+    // the basic cp functionality
     int fd1,fd2, n, length;
     char* buffer;
 
@@ -128,14 +133,16 @@ int cp()
         perror("Error opening the output file\n");
         return 2;
     }
+
     length = lseek (fd1, 0, SEEK_END) - lseek(fd1, 0, SEEK_SET);
-    buffer = (char *)malloc(length * sizeof(char));
+    buffer = (char *) malloc(length * sizeof(char));
 
     if(buffer == NULL)
     {
         perror("Malloc failed.");
         return 3;
     }
+    // basic file reading and writing
     while( (n = read(fd1, buffer, length)) > 0)
     {
         buffer[n] = '\0';
@@ -169,7 +176,7 @@ int main(int argc, char *argv[])
 
     // assinging true to the flags given in the arguments
     short c;
-    bool iFlag = false, rFlag = false, tFlag = false, vFlag = false, hFlag = false;
+    bool iFlag = false, rFlag = false, tFlag = false, vFlag = false, hFlag = false, noFlags = true;
     char tDir[30];
     while((c = getopt(argc, argv, "irRt:v")) != -1)
     {
@@ -177,18 +184,22 @@ int main(int argc, char *argv[])
         {
             case 'i':
                 // shows prompt
+                noFlags = false;
                 iFlag = 1;
                 break;
             case 'r':
                 // recursive
+                noFlags = false;
                 rFlag = 1;
                 break;
             case 'R':
                 // same as 'r'
+                noFlags = false;
                 rFlag = 1;
                 break;
             case 't':
                 // target directory, copies all args in the directory
+                noFlags = false;
                 tFlag = 1;
                 strcpy(tDir, optarg);
                 // delete the cout after testing
@@ -196,6 +207,7 @@ int main(int argc, char *argv[])
                 break;
             case 'v':
                 // verbose - explains what it's doing
+                noFlags = false;
                 vFlag = 1;
                 break;
             default:
@@ -204,7 +216,7 @@ int main(int argc, char *argv[])
         }
     }
     // checking the flags after assignment
-    if(iFlag == true)
+    if (iFlag == true)
     {
         // prompt for overwriting, if no, then don't copy
         std::cout << "Overwrite '" << fD[1] << "'?(y/n): ";
@@ -215,15 +227,15 @@ int main(int argc, char *argv[])
         std::cin.clear();
         std::cin.ignore();
     }
-    else if(vFlag == true)
+    else if (vFlag == true)
     {
-        // explaining what it's doing
+        // "explaining" what it's doing
         std::cout << "'" << fD[0] << "' -> '" << fD[1] << "'\n";
         cp();
     }
-    else if(tFlag == true)
+    else if (tFlag == true)
         cp_t(tDir, fDNr);
-    else if(rFlag == true)
+    else if (rFlag == true)
     {
         DIR *dir;
         struct dirent *ent;
@@ -234,7 +246,7 @@ int main(int argc, char *argv[])
         {
             // creating the destination directory
             char *dirName = basename(fD[0]);
-            snprintf(destPath, FILENAME_MAX, "%s/%s", fD[1], dirName);
+            snprintf(destPath, FILENAME_MAX, "%s/%s", fD[1], dirName); // works like printf, but doesn't output, instead it stores it in the buffer
             strcpy(fD[1], destPath);
             if (mkdir(destPath, 0777) != 0)
             {
@@ -247,7 +259,7 @@ int main(int argc, char *argv[])
         }
         cp_r(fD[0], fD[1]);
     }
-    else if(iFlag == false && rFlag == false && tFlag == false && vFlag == false)
+    else if (noFlags = true)
         cp();
     
     return 0;

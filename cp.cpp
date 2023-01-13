@@ -174,10 +174,10 @@ int main(int argc, char *argv[])
                 fD[fDNr++] = argv[i];
         }
 
-    // assinging true to the flags given in the arguments
     short c;
     bool iFlag = false, rFlag = false, tFlag = false, vFlag = false, hFlag = false, noFlags = true;
     char tDir[30];
+    // assinging true to the flags given in the arguments
     while((c = getopt(argc, argv, "irRt:v")) != -1)
     {
         switch(c)
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
                 std::cout << "tDir: " << tDir << '\n';
                 break;
             case 'v':
-                // verbose - explains what it's doing
+                // verbose - "explains" what it's doing
                 noFlags = false;
                 vFlag = 1;
                 break;

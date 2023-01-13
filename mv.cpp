@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     short c;
     bool iFlag = false, tFlag = false, SFlag = false;
     char tDir[30];
+    // assinging true to the flags given in the arguments
     while((c = getopt(argc, argv, "it:S")) != -1)
     {
         switch(c)

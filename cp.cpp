@@ -137,6 +137,7 @@ int cpt(char *loc)
         close(fD1);
         close(fD2);
     }
+    return 0;
 }
 
 int cp()
@@ -178,6 +179,8 @@ int cp()
     free(buffer);
     close(fD1);
     close(fD2);
+
+    return 0;
 }
 
 int main(int argc, char *argv[])

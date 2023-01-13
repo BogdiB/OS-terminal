@@ -101,11 +101,11 @@ void mvS()
                 ofs.close();
                 // path and aPath are identical except for their names
                 // replace path with cPath
-                std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
-                std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
-                ofs << ifs.rdbuf();
-                ifs.close();
-                ofs.close();
+                std::ifstream ifs2(cPath, std::ios::in | std::ios::binary); // source
+                std::ofstream ofs2(path, std::ios::out | std::ios::binary); // destination
+                ofs2 << ifs2.rdbuf();
+                ifs2.close();
+                ofs2.close();
                 remove(cPath);
             }
             else
@@ -179,11 +179,11 @@ void mvS()
             ofs.close();
             // path and aPath are identical except for their names
             // replace path with cPath
-            std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
-            std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
-            ofs << ifs.rdbuf();
-            ifs.close();
-            ofs.close();
+            std::ifstream ifs2(cPath, std::ios::in | std::ios::binary); // source
+            std::ofstream ofs2(path, std::ios::out | std::ios::binary); // destination
+            ofs2 << ifs2.rdbuf();
+            ifs2.close();
+            ofs2.close();
             remove(cPath);
         }
         else

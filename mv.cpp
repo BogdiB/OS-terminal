@@ -21,7 +21,7 @@ short fDNr = 0;
 bool prompt()
 {
     // prompt for overwriting, if no, then don't copy
-    std::cout << "Overwrite '" << fD[1] << "'?(y/n): ";
+    std::cout << "Permission to overwrite?(y/n): ";
     char yn = getc(stdin);
     // any other input besides 'y' and 'Y' gets treated as no
     if (yn == 'y' || yn == 'Y')
@@ -37,6 +37,7 @@ bool prompt()
 
 void mvS()
 {
+    // the extension from the -S flag should be the first descriptor (fD[0])
     // not removing the source file because in the command requirement is that this command has -b flag included, which means leave a backup (as far as I could find)
     char path[PATH_MAX], cPath[PATH_MAX]; // path is destination, cPath is source
     // the moving
@@ -380,8 +381,13 @@ int main(int argc, char *argv[])
         //         perror("Error renaming/moving file");
         mvt();
     }
-    else if(SFlag)
-        mvS();
+    else if (SFlag)
+    {
+        if (fDNr < 2) // should be minimum 3, because the first one is the -S extension
+            mvS();
+        else
+            std::cout << COLOR_ERROR << "\n" << COLOR_RESET;
+    }
     else
     {
         // if (fDNr > 2)

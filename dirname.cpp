@@ -2,6 +2,9 @@
 #include <unistd.h>
 #include <cstring>
 
+#define COLOR_ERROR "\a\033[0;31;1m" // makes font red
+#define COLOR_RESET "\033[0m" //resets font color
+
 int main(int argc, char *argv[])
 {
     // COMPILE EVERY CHANGE IN THE SAME DIRECTORY WITH 'terminalOS2.cpp' with: g++ -o dirname dirname.cpp
@@ -9,6 +12,13 @@ int main(int argc, char *argv[])
     // no flags have been assigned for this function recreation
 
     // more detailed comments since it's smaller code
+    // checking for flags
+    for(short i = 1; i < argc; ++i)
+        if (argv[i][0] == '-') // if the first character in this argument is '-', that means it's a flag, so we notify the user
+        {
+            std::cout << COLOR_ERROR << "Command does not accept flags.\n" << COLOR_RESET;
+            return 1;
+        }
     // going through all arguments given
     for (short i = 1; i < argc; ++i)
     {

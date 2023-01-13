@@ -37,107 +37,161 @@ bool prompt()
 
 void mvS()
 {
-    ;
+    // not removing the source file because in the command requirement is that this command has -b flag included, which means leave a backup (as far as I could find)
+    char path[PATH_MAX], cPath[PATH_MAX]; // path is destination, cPath is source
+    // the moving
+    if (fDNr > 2)
+    {
+        // source, destination
+        // fD[i], fD[fDNr - 1]
+        // getting the destination path (which is constant)
+        strcpy(path, currentPath);
+        if (fD[fDNr - 1][0] == '.')
+        {
+            // getting rid of the '.'
+            *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
+            // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
+                // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
+            if (fD[fDNr - 1][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[fDNr - 1]);
+        }
+        else
+        {
+            if (fD[fDNr - 1][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[fDNr - 1]);
+        }
+
+        for (short i = 0; i < fDNr - 1; ++i) // fDNr - 1 because the last one will be the path  // fD[i], fD[fDNr - 1]
+        {
+            strcpy(cPath, currentPath);
+            // getting the source path
+            if (fD[i][0] == '.')
+            {
+                // getting rid of the '.'
+                *(fD[i]) = *(fD[i] + 1);
+                // for (short j = 0; j < strlen(fD[i]) - 1; ++j)
+                    // fD[i][j] = fD[i][j + 1];
+                if (fD[i][0] != '/')
+                    strcat(cPath, "/");
+                strcat(cPath, fD[i]);
+            }
+            else
+            {
+                if (fD[i][0] != '/')
+                    strcat(cPath, "/");
+                strcat(cPath, fD[i]);
+            }
+
+            std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+            std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
+            ofs << ifs.rdbuf();
+            ifs.close();
+            ofs.close();
+            // not removing the source file because in the command requirement is that this command has -b flag included, which means leave a backup (as far as I could find)
+        }
+            // if (rename(fD[i], fD[fDNr - 1]) != 0) // renames file, and moves it if need be
+            //     perror("Error renaming/moving file");
+    }
+    else
+    {
+        // source, destination
+        // fD[0], fD[1]
+        // getting the destination directory path
+        strcpy(path, currentPath);
+        if (fD[1][0] == '.')
+        {
+            // getting rid of the '.'
+            *(fD[1]) = *(fD[1] + 1);
+            // for (short i = 0; i < strlen(fD[1]) - 1; ++i)
+                // fD[1][i] = fD[1][i + 1];
+            if (fD[1][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[1]);
+        }
+        else
+        {
+            if (fD[1][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[1]);
+        }
+
+        // getting the source directory path
+        strcpy(cPath, currentPath);
+        if (fD[0][0] == '.')
+        {
+            // getting rid of the '.'
+            *(fD[0]) = *(fD[0] + 1);
+            // for (short i = 0; i < strlen(fD[0]) - 1; ++i)
+                // fD[0][i] = fD[0][i + 1];
+            if (fD[0][0] != '/')
+                strcat(cPath, "/");
+            strcat(cPath, fD[0]);
+        }
+        else
+        {
+            if (fD[0][0] != '/')
+                strcat(cPath, "/");
+            strcat(cPath, fD[0]);
+        }
+
+        std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+        std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
+        ofs << ifs.rdbuf();
+        ifs.close();
+        ofs.close();
+        // not removing the source file because in the command requirement is that this command has -b flag included, which means leave a backup (as far as I could find)
+    }
 }
 
 void mvt()
 {
-    char path[PATH_MAX], cPath[PATH_MAX];
-    // the moving
-    if (fDNr > 2)
+    char path[PATH_MAX], cPath[PATH_MAX]; // path is destination, cPath is source
+    // destination, source
+    // fD[0], fD[i]
+    // getting the destination path (which is constant)
+    strcpy(path, currentPath);
+    if (fD[0][0] == '.')
     {
-        // fD[i], fD[fDNr - 1]
-        // getting the main directory path
-        strcpy(path, currentPath);
-        if (fD[fDNr - 1][0] == '.')
-        {
-            // getting rid of the '.'
-            *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-            // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-            if (fD[fDNr - 1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
-        }
-        else
-        {
-            if (fD[fDNr - 1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
-        }
-
-        for (short i = 0; i < fDNr - 1; ++i) // fDNr - 1 because the last one will be the path  // fD[i], fD[fDNr - 1]
-        {
-            strcpy(cPath, currentPath);
-            if (fD[fDNr - 1][0] == '.')
-            {
-                // getting rid of the '.'
-                *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-                // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                    // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-                if (fD[fDNr - 1][0] != '/')
-                    strcat(cPath, "/");
-                strcat(cPath, fD[fDNr - 1]);
-            }
-            else
-            {
-                if (fD[fDNr - 1][0] != '/')
-                    strcat(cPath, "/");
-                strcat(cPath, fD[fDNr - 1]);
-            }
-
-            std::ifstream ifs(cPath, std::ios::in | std::ios::binary);
-            std::ofstream ofs(path, std::ios::out | std::ios::binary);
-            ofs << ifs.rdbuf();
-            ifs.close();
-            ofs.close();
-            remove(cPath);
-        }
-            // if (rename(fD[i], fD[fDNr - 1]) != 0) // renames file, and moves it if need be
-            //     perror("Error renaming/moving file");
+        // getting rid of the '.'
+        *(fD[0]) = *(fD[0] + 1);
+        // for (short i = 0; i < strlen(fD[0]) - 1; ++i)
+            // fD[0][i] = fD[0][i + 1];
+        if (fD[0][0] != '/')
+            strcat(path, "/");
+        strcat(path, fD[0]);
     }
     else
     {
-        // fD[0], fD[1]
-        // getting the main directory path
-        strcpy(path, currentPath);
-        if (fD[fDNr - 1][0] == '.')
-        {
-            // getting rid of the '.'
-            *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-            // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-            if (fD[fDNr - 1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
-        }
-        else
-        {
-            if (fD[fDNr - 1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
-        }
+        if (fD[0][0] != '/')
+            strcat(path, "/");
+        strcat(path, fD[0]);
+    }
 
+    for (short i = 0; i < fDNr - 1; ++i) // fDNr - 1 because the last one will be the path  // fD[0], fD[i]
+    {
         strcpy(cPath, currentPath);
-        if (fD[fDNr - 1][0] == '.')
+        // getting the source path
+        if (fD[i][0] == '.')
         {
             // getting rid of the '.'
-            *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-            // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-            if (fD[fDNr - 1][0] != '/')
+            *(fD[i]) = *(fD[i] + 1);
+            // for (short j = 0; j < strlen(fD[i]) - 1; ++j)
+                // fD[i][j] = fD[i][j + 1];
+            if (fD[i][0] != '/')
                 strcat(cPath, "/");
-            strcat(cPath, fD[fDNr - 1]);
+            strcat(cPath, fD[i]);
         }
         else
         {
-            if (fD[fDNr - 1][0] != '/')
+            if (fD[i][0] != '/')
                 strcat(cPath, "/");
-            strcat(cPath, fD[fDNr - 1]);
+            strcat(cPath, fD[i]);
         }
-
-        std::ifstream ifs(cPath, std::ios::in | std::ios::binary);
-        std::ofstream ofs(path, std::ios::out | std::ios::binary);
+        
+        std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+        std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
         ofs << ifs.rdbuf();
         ifs.close();
         ofs.close();
@@ -145,15 +199,15 @@ void mvt()
     }
 }
 
-// other way to do mv
 void mv()
 {
-    char path[PATH_MAX], cPath[PATH_MAX];
+    char path[PATH_MAX], cPath[PATH_MAX]; // path is destination, cPath is source
     // the moving
     if (fDNr > 2)
     {
+        // source, destination
         // fD[i], fD[fDNr - 1]
-        // getting the main directory path
+        // getting the destination path (which is constant)
         strcpy(path, currentPath);
         if (fD[fDNr - 1][0] == '.')
         {
@@ -175,25 +229,26 @@ void mv()
         for (short i = 0; i < fDNr - 1; ++i) // fDNr - 1 because the last one will be the path  // fD[i], fD[fDNr - 1]
         {
             strcpy(cPath, currentPath);
-            if (fD[fDNr - 1][0] == '.')
+            // getting the source path
+            if (fD[i][0] == '.')
             {
                 // getting rid of the '.'
-                *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-                // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                    // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-                if (fD[fDNr - 1][0] != '/')
+                *(fD[i]) = *(fD[i] + 1);
+                // for (short j = 0; j < strlen(fD[i]) - 1; ++j)
+                    // fD[i][j] = fD[i][j + 1];
+                if (fD[i][0] != '/')
                     strcat(cPath, "/");
-                strcat(cPath, fD[fDNr - 1]);
+                strcat(cPath, fD[i]);
             }
             else
             {
-                if (fD[fDNr - 1][0] != '/')
+                if (fD[i][0] != '/')
                     strcat(cPath, "/");
-                strcat(cPath, fD[fDNr - 1]);
+                strcat(cPath, fD[i]);
             }
 
-            std::ifstream ifs(cPath, std::ios::in | std::ios::binary);
-            std::ofstream ofs(path, std::ios::out | std::ios::binary);
+            std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+            std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
             ofs << ifs.rdbuf();
             ifs.close();
             ofs.close();
@@ -204,50 +259,52 @@ void mv()
     }
     else
     {
+        // source, destination
         // fD[0], fD[1]
-        // getting the main directory path
+        // getting the destination directory path
         strcpy(path, currentPath);
-        if (fD[fDNr - 1][0] == '.')
+        if (fD[1][0] == '.')
         {
             // getting rid of the '.'
-            *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-            // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-            if (fD[fDNr - 1][0] != '/')
+            *(fD[1]) = *(fD[1] + 1);
+            // for (short i = 0; i < strlen(fD[1]) - 1; ++i)
+                // fD[1][i] = fD[1][i + 1];
+            if (fD[1][0] != '/')
                 strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
+            strcat(path, fD[1]);
         }
         else
         {
-            if (fD[fDNr - 1][0] != '/')
+            if (fD[1][0] != '/')
                 strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
+            strcat(path, fD[1]);
         }
 
+        // getting the source directory path
         strcpy(cPath, currentPath);
-        if (fD[fDNr - 1][0] == '.')
+        if (fD[0][0] == '.')
         {
             // getting rid of the '.'
-            *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-            // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-            if (fD[fDNr - 1][0] != '/')
+            *(fD[0]) = *(fD[0] + 1);
+            // for (short i = 0; i < strlen(fD[0]) - 1; ++i)
+                // fD[0][i] = fD[0][i + 1];
+            if (fD[0][0] != '/')
                 strcat(cPath, "/");
-            strcat(cPath, fD[fDNr - 1]);
+            strcat(cPath, fD[0]);
         }
         else
         {
-            if (fD[fDNr - 1][0] != '/')
+            if (fD[0][0] != '/')
                 strcat(cPath, "/");
-            strcat(cPath, fD[fDNr - 1]);
+            strcat(cPath, fD[0]);
         }
 
-        std::ifstream ifs(cPath, std::ios::in | std::ios::binary);
-        std::ofstream ofs(path, std::ios::out | std::ios::binary);
+        std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
+        std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
         ofs << ifs.rdbuf();
         ifs.close();
         ofs.close();
-        remove(cPath);
+        remove(cPath); // remove/delete source
     }
         // if (rename(fD[0], fD[1]) != 0) // renames file, and moves it if need be
         //     perror("Error renaming/moving file");
@@ -314,13 +371,14 @@ int main(int argc, char *argv[])
     if (tFlag)
     {
         // means fD[0] will be target
-        if (fDNr > 2)
-            for (short i = 1; i < fDNr; ++i) // i =  1 because the first one will be the path // fD[i], fD[0]
-                if (rename(fD[i], fD[0]) != 0) // renames file, and moves it if need be
-                    perror("Error renaming/moving file");
-        else // renames file, and moves it if need be // fD[1], fD[0]
-            if (rename(fD[1], fD[0]) != 0)
-                perror("Error renaming/moving file");
+        // if (fDNr > 2)
+        //     for (short i = 1; i < fDNr; ++i) // i =  1 because the first one will be the path // fD[i], fD[0]
+        //         if (rename(fD[i], fD[0]) != 0) // renames file, and moves it if need be
+        //             perror("Error renaming/moving file");
+        // else // renames file, and moves it if need be // fD[1], fD[0]
+        //     if (rename(fD[1], fD[0]) != 0)
+        //         perror("Error renaming/moving file");
+        mvt();
     }
     else if(SFlag)
         mvS();

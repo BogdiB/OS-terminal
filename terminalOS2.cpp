@@ -59,7 +59,7 @@ void mv(char *args[])
     {
         // child process
         std::string dirpath = currentPath;
-        dirpath += "/dirname";
+        dirpath += "/mv";
         if (execvp(dirpath.c_str(), args) == -1)
             perror("Exec error");
         exit(0);

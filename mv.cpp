@@ -395,8 +395,8 @@ int main(int argc, char *argv[])
         // std::cout << argv[i] << '\n';
         if (argv[i][0] != '-') // if the first character in this argument is '-', that means it's a flag, so we skip over it
         {
-            *(fD + i - 1) = argv[i];
-            // std::cout << fD[i] << '\n'; // testing
+            *(fD + fDNr) = argv[i];
+            // std::cout << fD[fDNr] << '\n'; // testing
             ++fDNr;
         }
     }

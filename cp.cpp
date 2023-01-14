@@ -19,7 +19,7 @@ short fDNr = 0;
 bool prompt()
 {
     // prompt for overwriting, if no, then don't copy
-    std::cout << "Overwrite '" << fD[1] << "'?(y/n): ";
+    std::cout << "Permission to overwrite?(y/n): ";
     char yn = getc(stdin);
     // any other input besides 'y' and 'Y' gets treated as no
     if (yn == 'y' || yn == 'Y')
@@ -89,14 +89,14 @@ void cpr(char *source, char *dest)
     }
 }
 
-int cpt(char *loc)
+int cpt()
 {
     // target cp - almost the same as normal cp
-    for(short i = 0; i < fDNr - 1; ++i)
+    for(short i = 1; i < fDNr - 1; ++i)
     {
         char fLoc[512];
 
-        strcpy(fLoc, loc);
+        strcpy(fLoc, fD[0]);
         strcat(fLoc, "/");
         strcat(fLoc, fD[i]);
 
@@ -186,65 +186,99 @@ int cp()
 int main(int argc, char *argv[])
 {
     // COMPILE EVERY CHANGE IN THE SAME DIRECTORY WITH 'terminalOS2.cpp' with: g++ -o cp cp.cpp
-
     // keeping everything except argv[0] and flags in fD for later use
+
     for(short i = 1; i < argc; ++i)
     {
         // std::cout << argv[i] << '\n';
         if (argv[i][0] != '-') // if the first character in this argument is '-', that means it's a flag, so we skip over it
         {
-            *(fD + i - 1) = argv[i];
-            // std::cout << fD[i] << '\n'; // testing
+            *(fD + fDNr) = argv[i];
+            // std::cout << fD[fDNr] << '\n'; // testing
             ++fDNr;
+        }
+        else
+        {
+            switch(argv[i][1])
+            {
+                case 'i':
+                    // shows prompt
+                    iFlag = 1;
+                    break;
+                case 'r':
+                    // recursive
+                    rFlag = 1;
+                    break;
+                case 'R':
+                    // same as 'r'
+                    rFlag = 1;
+                    break;
+                case 't':
+                    // target directory, copies all args in the directory
+                    tFlag = 1;
+                    // strcpy(tDir, optarg);
+                    // delete the cout after testing
+                    // std::cout << "tDir: " << tDir << '\n';
+                    break;
+                case 'v':
+                    // verbose - "explains" what it's doing
+                    vFlag = 1;
+                    break;
+                default:
+                    std::cout << COLOR_ERROR << "Flag '" << argv[i][1] << "' not found.\n" << COLOR_RESET;
+                    break;
+            }
         }
     }
 
-    short c;
+    // short c;
     // assinging true to the flags given in the arguments
-    while((c = getopt(argc, argv, "irRt:v")) != -1)
-    {
-        switch(c)
-        {
-            case 'i':
-                // shows prompt
-                iFlag = 1;
-                break;
-            case 'r':
-                // recursive
-                rFlag = 1;
-                break;
-            case 'R':
-                // same as 'r'
-                rFlag = 1;
-                break;
-            case 't':
-                // target directory, copies all args in the directory
-                tFlag = 1;
-                strcpy(tDir, optarg);
-                // delete the cout after testing
-                std::cout << "tDir: " << tDir << '\n';
-                break;
-            case 'v':
-                // verbose - "explains" what it's doing
-                vFlag = 1;
-                break;
-            default:
-                std::cout << COLOR_ERROR << "Flag '" << c << "' not found.\n" << COLOR_RESET;
-                break;
-        }
-    }
+    // while((c = getopt(argc, argv, "irRtv")) != -1)
+    // {
+    //     switch(c)
+    //     {
+    //         case 'i':
+    //             // shows prompt
+    //             iFlag = 1;
+    //             break;
+    //         case 'r':
+    //             // recursive
+    //             rFlag = 1;
+    //             break;
+    //         case 'R':
+    //             // same as 'r'
+    //             rFlag = 1;
+    //             break;
+    //         case 't':
+    //             // target directory, copies all args in the directory
+    //             tFlag = 1;
+    //             // strcpy(tDir, optarg);
+    //             // delete the cout after testing
+    //             // std::cout << "tDir: " << tDir << '\n';
+    //             break;
+    //         case 'v':
+    //             // verbose - "explains" what it's doing
+    //             vFlag = 1;
+    //             break;
+    //         default:
+    //             std::cout << COLOR_ERROR << "Flag '" << c << "' not found.\n" << COLOR_RESET;
+    //             break;
+    //     }
+    // }
 
     // checking the flags after assignment
     if (iFlag)
+    {
         if (!prompt())
             return 0;
+    }
     if (vFlag)
     {
         // "explaining" what it's doing
         std::cout << "'" << fD[0] << "' -> '" << fD[1] << "'\n";
     }
     if (tFlag)
-        cpt(tDir);
+        cpt();
     else if (rFlag)
     {
         DIR *dir;

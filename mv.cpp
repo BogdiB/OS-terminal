@@ -438,16 +438,16 @@ int main(int argc, char *argv[])
         //     if (rename(fD[1], fD[0]) != 0)
         //         perror("Error renaming/moving file");
         if (fDNr < 3) // should be minimum 3, because the first one is the -t directory
-            mvt();
-        else
             std::cout << COLOR_ERROR << "Minimum 3 arguments required for the use of this flag.\n" << COLOR_RESET;
+        else
+            mvt();
     }
     else if (SFlag)
     {
         if (fDNr < 3) // should be minimum 3, because the first one is the -S extension
-            mvS();
-        else
             std::cout << COLOR_ERROR << "Minimum 3 arguments required for the use of this flag.\n" << COLOR_RESET;
+        else
+            mvS();
     }
     else
     {

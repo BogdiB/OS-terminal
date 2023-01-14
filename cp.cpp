@@ -92,7 +92,7 @@ void cpr(char *source, char *dest)
 int cpt()
 {
     // target cp - almost the same as normal cp
-    for(short i = 1; i < fDNr - 1; ++i)
+    for(short i = 1; i < fDNr; ++i)
     {
         char fLoc[512];
 
@@ -267,15 +267,15 @@ int main(int argc, char *argv[])
     // }
 
     // checking the flags after assignment
-    if (iFlag)
-    {
-        if (!prompt())
-            return 0;
-    }
     if (vFlag)
     {
         // "explaining" what it's doing
         std::cout << "'" << fD[0] << "' -> '" << fD[1] << "'\n";
+    }
+    if (iFlag)
+    {
+        if (!prompt())
+            return 0;
     }
     if (tFlag)
         cpt();

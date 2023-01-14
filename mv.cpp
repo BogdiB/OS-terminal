@@ -228,7 +228,7 @@ void mvt()
         strcat(path, fD[0]);
     }
 
-    for (short i = 0; i < fDNr - 1; ++i) // fDNr - 1 because the last one will be the path  // fD[0], fD[i]
+    for (short i = 1; i < fDNr; ++i) // fD[0], fD[i]
     {
         strcpy(cPath, currentPath);
         // getting the source path

@@ -207,29 +207,34 @@ void mvS()
 void mvt()
 {
     char path[PATH_MAX], cPath[PATH_MAX]; // path is destination, cPath is source
-    // destination, source
-    // fD[0], fD[i]
-    // getting the destination path (which is constant)
-    strcpy(path, currentPath);
-    if (fD[0][0] == '.')
-    {
-        // getting rid of the '.'
-        *(fD[0]) = *(fD[0] + 1);
-        // for (short i = 0; i < strlen(fD[0]) - 1; ++i)
-            // fD[0][i] = fD[0][i + 1];
-        if (fD[0][0] != '/')
-            strcat(path, "/");
-        strcat(path, fD[0]);
-    }
-    else
-    {
-        if (fD[0][0] != '/')
-            strcat(path, "/");
-        strcat(path, fD[0]);
-    }
-
     for (short i = 1; i < fDNr; ++i) // fD[0], fD[i]
     {
+        // destination, source
+        // fD[0], fD[i]
+        // getting the destination path
+        strcpy(path, currentPath);
+        if (fD[0][0] == '.')
+        {
+            // getting rid of the '.'
+            *(fD[0]) = *(fD[0] + 1);
+            // for (short i = 0; i < strlen(fD[0]) - 1; ++i)
+                // fD[0][i] = fD[0][i + 1];
+            if (fD[0][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[0]);
+            strcat(path, "/");
+            strcat(path, fD[i]);
+        }
+        else
+        {
+            if (fD[0][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[0]);
+            strcat(path, "/");
+            strcat(path, fD[i]);
+        }
+
+
         strcpy(cPath, currentPath);
         // getting the source path
         if (fD[i][0] == '.')
@@ -437,8 +442,8 @@ int main(int argc, char *argv[])
         // else // renames file, and moves it if need be // fD[1], fD[0]
         //     if (rename(fD[1], fD[0]) != 0)
         //         perror("Error renaming/moving file");
-        if (fDNr < 3) // should be minimum 3, because the first one is the -t directory
-            std::cout << COLOR_ERROR << "Minimum 3 arguments required for the use of this flag.\n" << COLOR_RESET;
+        if (fDNr < 2) // should be minimum 2, the first one is the -t directory
+            std::cout << COLOR_ERROR << "Minimum 2 arguments required for the use of this flag.\n" << COLOR_RESET;
         else
             mvt();
     }

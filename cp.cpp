@@ -147,12 +147,12 @@ int cp()
     int fD1, fD2;
     if((fD1 = open(fD[0], O_RDONLY)) < 0)
     {
-        perror("Error opening the input file\n");
+        perror("Error opening the input file");
         return 2;
     }
     if((fD2 = open(fD[1],  O_WRONLY | O_CREAT ,0664)) < 0)
     {
-        perror("Error opening the output file\n");
+        perror("Error opening the output file");
         return 2;
     }
 
@@ -172,7 +172,7 @@ int cp()
     }
     if( n < 0)
     {
-        perror("Error reading the file\n");
+        perror("Error reading the file");
         return 4;
     }
 
@@ -186,15 +186,18 @@ int cp()
 int main(int argc, char *argv[])
 {
     // COMPILE EVERY CHANGE IN THE SAME DIRECTORY WITH 'terminalOS2.cpp' with: g++ -o cp cp.cpp
-    // argv only consists of things after the dirname command in terminalOS2
 
     // keeping everything except argv[0] and flags in fD for later use
     for(short i = 1; i < argc; ++i)
+    {
+        // std::cout << argv[i] << '\n';
         if (argv[i][0] != '-') // if the first character in this argument is '-', that means it's a flag, so we skip over it
         {
-            *(fD + i) = argv[i];
+            *(fD + i - 1) = argv[i];
+            // std::cout << fD[i] << '\n'; // testing
             ++fDNr;
         }
+    }
 
     short c;
     // assinging true to the flags given in the arguments
@@ -230,6 +233,7 @@ int main(int argc, char *argv[])
                 break;
         }
     }
+
     // checking the flags after assignment
     if (iFlag)
         if (!prompt())

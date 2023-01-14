@@ -387,15 +387,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    std::cout << "You have to be in the same directory or higher.\n";
+    //std::cout << "You have to be in the same directory or higher.\n";
 
     // keeping everything except argv[0] and flags in fD for later use
     for(short i = 1; i < argc; ++i)
+    {
+        // std::cout << argv[i] << '\n';
         if (argv[i][0] != '-') // if the first character in this argument is '-', that means it's a flag, so we skip over it
         {
-            *(fD + i) = argv[i];
+            *(fD + i - 1) = argv[i];
+            // std::cout << fD[i] << '\n'; // testing
             ++fDNr;
         }
+    }
 
     short c;
     // assinging true to the flags given in the arguments
@@ -405,18 +409,18 @@ int main(int argc, char *argv[])
         {
             case 'i':
                 // shows prompt
-                iFlag = 1;
+                iFlag = true;
                 break;
             case 't':
                 // target directory, moves all args in the directory
-                tFlag = 1;
+                tFlag = true;
                 // strcpy(tDir, optarg);
                 // // delete the cout after testing
                 // std::cout << "tDir: " << tDir << '\n';
                 break;
             case 'S':
                 // make it with -b flag too
-                SFlag = 1;
+                SFlag = true;
                 break;
             default:
                 std::cout << COLOR_ERROR << "Flag '" << c << "' not found.\n" << COLOR_RESET;

@@ -197,7 +197,7 @@ bool commandDecrypt(char initialCommand[])
         // searching which command it is
         if (strcmp(words[0], "cp") == 0)
         {
-            if (wordNr == 1)
+            if (wordNr < 3)
             {
                 std::cout << COLOR_ERROR << "This command requires at least 2 arguments, for help type 'help'.\n" << COLOR_RESET;
                 return true;
@@ -207,7 +207,7 @@ bool commandDecrypt(char initialCommand[])
         }
         else if (strcmp(words[0], "mv") == 0)
         {
-            if (wordNr == 1)
+            if (wordNr < 3)
             {
                 std::cout << COLOR_ERROR << "This command requires at least 2 arguments, for help type 'help'.\n" << COLOR_RESET;
                 return true;
@@ -217,7 +217,7 @@ bool commandDecrypt(char initialCommand[])
         }
         else if (strcmp(words[0], "dirname") == 0)
         {
-            if (wordNr == 1)
+            if (wordNr < 2)
             {
                 std::cout << COLOR_ERROR << "This command requires at least 1 argument, for help type 'help'.\n" << COLOR_RESET;
                 return true;

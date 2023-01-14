@@ -104,23 +104,18 @@ int cpt()
         int fD1, fD2;
         if((fD1 = open(fD[i], O_RDONLY)) < 0)
         {
-            perror("Error opening the input file\n");
+            perror("Error opening the input file");
             return 1;
         }
         if((fD2 = open(fLoc, O_WRONLY | O_CREAT, 0664)) < 0)
         {
-            perror("Error opening output file\n");
+            perror("Error opening output file");
             return 2;
         }
 
         int n, length = lseek(fD1, 0, SEEK_END) - lseek(fD1, 0, SEEK_SET);
         char *buffer = (char *) malloc(length * sizeof(char));
 
-        if(buffer == NULL)
-        {
-            perror("Error, null buffer");
-            return 3;
-        }
         // basic file reading and writing
         while((n = read(fD1, buffer, length)) > 0)
         {
@@ -129,8 +124,8 @@ int cpt()
         }
         if(n < 0)
         {
-            perror("Error reading the file\n");
-            return 4;
+            perror("Error reading the file");
+            return 3;
         }
 
         free(buffer);
@@ -150,7 +145,7 @@ int cp()
         perror("Error opening the input file");
         return 2;
     }
-    if((fD2 = open(fD[1],  O_WRONLY | O_CREAT ,0664)) < 0)
+    if((fD2 = open(fD[1],  O_WRONLY | O_CREAT | O_TRUNC ,0664)) < 0)
     {
         perror("Error opening the output file");
         return 2;
@@ -159,11 +154,6 @@ int cp()
     int n, length = lseek (fD1, 0, SEEK_END) - lseek(fD1, 0, SEEK_SET); // gets the file length so 
     char* buffer = (char *) malloc(length * sizeof(char));
 
-    if(buffer == NULL)
-    {
-        perror("Error, null buffer");
-        return 3;
-    }
     // basic file reading and writing
     while( (n = read(fD1, buffer, length)) > 0)
     {
@@ -173,7 +163,7 @@ int cp()
     if( n < 0)
     {
         perror("Error reading the file");
-        return 4;
+        return 3;
     }
 
     free(buffer);
@@ -230,41 +220,6 @@ int main(int argc, char *argv[])
             }
         }
     }
-
-    // short c;
-    // assinging true to the flags given in the arguments
-    // while((c = getopt(argc, argv, "irRtv")) != -1)
-    // {
-    //     switch(c)
-    //     {
-    //         case 'i':
-    //             // shows prompt
-    //             iFlag = 1;
-    //             break;
-    //         case 'r':
-    //             // recursive
-    //             rFlag = 1;
-    //             break;
-    //         case 'R':
-    //             // same as 'r'
-    //             rFlag = 1;
-    //             break;
-    //         case 't':
-    //             // target directory, copies all args in the directory
-    //             tFlag = 1;
-    //             // strcpy(tDir, optarg);
-    //             // delete the cout after testing
-    //             // std::cout << "tDir: " << tDir << '\n';
-    //             break;
-    //         case 'v':
-    //             // verbose - "explains" what it's doing
-    //             vFlag = 1;
-    //             break;
-    //         default:
-    //             std::cout << COLOR_ERROR << "Flag '" << c << "' not found.\n" << COLOR_RESET;
-    //             break;
-    //     }
-    // }
 
     // checking the flags after assignment
     if (vFlag)

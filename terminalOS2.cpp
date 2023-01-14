@@ -162,7 +162,7 @@ bool commandDecrypt(char initialCommand[])
     words[wordNr][wordCharsNr[wordNr++]] = '\0';
 
     bool ok = false;
-    if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "close") == 0 || strcmp(words[0], "stop") == 0)
+    if (strcmp(words[0], "exit") == 0)
         return false;
     // else if (strcmp(words[0], "history") == 0 || strcmp(words[0], "readh") == 0 || strcmp(words[0], "cath") == 0)
     // {
@@ -240,10 +240,8 @@ bool commandDecrypt(char initialCommand[])
                 std::string path = "/bin/";
                 path += words[0];
                 if (execvp(path.c_str(), args) == -1)
-                {
-                    perror("Exec error");
-                }
-                return 1;
+                    perror("Command not found");
+                exit(0);
             }
             else
             {
@@ -252,10 +250,10 @@ bool commandDecrypt(char initialCommand[])
             }
         }
     }
-    if (ok == false)
-        std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
+    // if (ok == false)
+    //     std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";
 
-    return 1;
+    return true;
 }
 
 int main(int argc, char *argv[])

@@ -387,8 +387,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //std::cout << "You have to be in the same directory or higher.\n";
-
     // keeping everything except argv[0] and flags in fD for later use
     for(short i = 1; i < argc; ++i)
     {
@@ -399,34 +397,32 @@ int main(int argc, char *argv[])
             // std::cout << fD[fDNr] << '\n'; // testing
             ++fDNr;
         }
-    }
-
-    short c;
-    // assinging true to the flags given in the arguments
-    while((c = getopt(argc, argv, "it:S")) != -1)
-    {
-        switch(c)
+        else
         {
-            case 'i':
-                // shows prompt
-                iFlag = true;
-                break;
-            case 't':
-                // target directory, moves all args in the directory
-                tFlag = true;
-                // strcpy(tDir, optarg);
-                // // delete the cout after testing
-                // std::cout << "tDir: " << tDir << '\n';
-                break;
-            case 'S':
-                // make it with -b flag too
-                SFlag = true;
-                break;
-            default:
-                std::cout << COLOR_ERROR << "Flag '" << c << "' not found.\n" << COLOR_RESET;
-                break;
+            switch(argv[i][1])
+            {
+                case 'i':
+                    // shows prompt
+                    iFlag = true;
+                    break;
+                case 't':
+                    // target directory, moves all args in the directory
+                    tFlag = true;
+                    // strcpy(tDir, optarg);
+                    // // delete the cout after testing
+                    // std::cout << "tDir: " << tDir << '\n';
+                    break;
+                case 'S':
+                    // make it with -b flag too
+                    SFlag = true;
+                    break;
+                default:
+                    std::cout << COLOR_ERROR << "Flag '" << argv[i][1] << "' not found.\n" << COLOR_RESET;
+                    break;
+            }
         }
     }
+
     // checking the flags after assignment
     if (iFlag)
         if (!prompt())
@@ -441,14 +437,17 @@ int main(int argc, char *argv[])
         // else // renames file, and moves it if need be // fD[1], fD[0]
         //     if (rename(fD[1], fD[0]) != 0)
         //         perror("Error renaming/moving file");
-        mvt();
+        if (fDNr < 3) // should be minimum 3, because the first one is the -t directory
+            mvt();
+        else
+            std::cout << COLOR_ERROR << "Minimum 3 arguments required for the use of this flag.\n" << COLOR_RESET;
     }
     else if (SFlag)
     {
-        if (fDNr < 2) // should be minimum 3, because the first one is the -S extension
+        if (fDNr < 3) // should be minimum 3, because the first one is the -S extension
             mvS();
         else
-            std::cout << COLOR_ERROR << "\n" << COLOR_RESET;
+            std::cout << COLOR_ERROR << "Minimum 3 arguments required for the use of this flag.\n" << COLOR_RESET;
     }
     else
     {

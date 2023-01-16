@@ -19,10 +19,10 @@
 
 char historyFileName[] = "history.txt"; // this is global just so I can change the name easier - forgot to re-add 
 char words[MAX_WORDS][MAX_WORD_CHARS], currentPath[PATH_MAX];
-short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
+short wordNr, argNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
 short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
 short redirectFilePlace; // index of the place in words where the redirect file is stored
-bool redirect = false, redirectAppend = false, redirectReverse = false; // >, >>, <
+bool redirect = false, redirectAppend = false, redirectIn = false; // >, >>, <
 
 void cp(char *args[])
 {
@@ -193,9 +193,9 @@ bool commandDecrypt(char initialCommand[])
         // making args (in this case the arguments have to start from index 1 in args, that's why we give words[0] to args only here, even though it is redundant)
         
         char *args[20];
+        argNr = 0;
         for (short i = 0; i < wordNr; ++i)
         {
-            *(args + i) = words[i];
             if (strcmp(words[i], ">") == 0)
             {
                 redirect = true;
@@ -210,18 +210,20 @@ bool commandDecrypt(char initialCommand[])
             }
             else if (strcmp(words[i], "<") == 0)
             {
-                redirectReverse = true;
+                redirectIn = true;
                 redirectFilePlace = ++i;
                 continue;
             }
+            *(args + argNr) = words[i];
+            ++argNr;
         }
-        *(args + wordNr) = nullptr;
+        *(args + argNr) = nullptr;
 
         // searching which redirect it is, if there is one in the first place
+        int fileD;
         if (redirect)
         {
-            int fileD;
-            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC)) < 0) // replacing the file/truncating
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0) // replacing the file/truncating
             {
                 perror("Error opening redirect file");
                 return true;
@@ -231,8 +233,7 @@ bool commandDecrypt(char initialCommand[])
         }
         else if (redirectAppend)
         {
-            int fileD;
-            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND)) < 0) // appending
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND, 0664)) < 0) // appending
             {
                 perror("Error opening redirect file");
                 return true;
@@ -240,9 +241,8 @@ bool commandDecrypt(char initialCommand[])
             else
                 dup2(fileD, 1); // 1 is stdout
         }
-        else if (redirectReverse)
+        else if (redirectIn)
         {
-            int fileD;
             if ((fileD = open(words[redirectFilePlace], O_RDONLY)) < 0) // only reading needed
             {
                 perror("Error opening redirect file");
@@ -251,35 +251,55 @@ bool commandDecrypt(char initialCommand[])
             else
                 dup2(fileD, 0); // 0 is stdin
         }
+
         // searching which command it is
         if (strcmp(words[0], "cp") == 0)
         {
-            if (wordNr < 3)
+            if (argNr < 2)
             {
                 std::cout << COLOR_ERROR << "This command requires at least 2 arguments, for help type 'help'.\n" << COLOR_RESET;
                 return true;
             }
             cp(args);
+            if (redirect)
+                dup2(1, fileD); // 1 is stdout
+            else if (redirectAppend)
+                dup2(1, fileD); // 1 is stdout
+            else if (redirectIn)
+                dup2(0, fileD); // 0 is stdin
             return true;
         }
         else if (strcmp(words[0], "mv") == 0)
         {
-            if (wordNr < 3)
+            if (argNr < 2)
             {
                 std::cout << COLOR_ERROR << "This command requires at least 2 arguments, for help type 'help'.\n" << COLOR_RESET;
                 return true;
             }
             mv(args);
+            if (redirect)
+                dup2(1, fileD); // 1 is stdout
+            else if (redirectAppend)
+                dup2(1, fileD); // 1 is stdout
+            else if (redirectIn)
+                dup2(0, fileD); // 0 is stdin
             return true;
         }
         else if (strcmp(words[0], "dirname") == 0)
         {
-            if (wordNr < 2)
+            if (argNr < 1)
             {
                 std::cout << COLOR_ERROR << "This command requires at least 1 argument, for help type 'help'.\n" << COLOR_RESET;
                 return true;
             }
             dirname(args);
+            // "closing" the dup2
+            if (redirect)
+                dup2(1, fileD); // 1 is stdout
+            else if (redirectAppend)
+                dup2(1, fileD); // 1 is stdout
+            else if (redirectIn)
+                dup2(0, fileD); // 0 is stdin
             return true;
         }
         else
@@ -289,6 +309,13 @@ bool commandDecrypt(char initialCommand[])
             {
                 // std::cout << COLOR_ERROR << "Error creating a process.\n" << COLOR_RESET;
                 perror("Process creation error");
+                // "closing" the dup2
+                if (redirect)
+                    dup2(1, fileD); // 1 is stdout
+                else if (redirectAppend)
+                    dup2(1, fileD); // 1 is stdout
+                else if (redirectIn)
+                    dup2(0, fileD); // 0 is stdin
                 return true;
             }
             if (id == 0)
@@ -298,6 +325,12 @@ bool commandDecrypt(char initialCommand[])
                 path += words[0];
                 if (execvp(path.c_str(), args) == -1)
                     perror("Command not found");
+                if (redirect)
+                    dup2(1, fileD); // 1 is stdout
+                else if (redirectAppend)
+                    dup2(1, fileD); // 1 is stdout
+                else if (redirectIn)
+                    dup2(0, fileD); // 0 is stdin
                 exit(0);
             }
             else
@@ -306,6 +339,13 @@ bool commandDecrypt(char initialCommand[])
                 wait(NULL);
             }
         }
+        // "closing" the dup2
+        if (redirect)
+            dup2(1, fileD); // 1 is stdout
+        else if (redirectAppend)
+            dup2(1, fileD); // 1 is stdout
+        else if (redirectIn)
+            dup2(0, fileD); // 0 is stdin
     }
     // if (ok == false)
     //     std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";

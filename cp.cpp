@@ -107,7 +107,7 @@ int cpt()
             perror("Error opening the input file");
             return 1;
         }
-        if((fD2 = open(fLoc, O_WRONLY | O_CREAT, 0664)) < 0)
+        if((fD2 = open(fLoc, O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0)
         {
             perror("Error opening output file");
             return 2;

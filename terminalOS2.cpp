@@ -6,6 +6,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #define PATH_MAX 1024 // used to be 4096, because that is the upper limit for paths, but that is too much memory used for not much benefit
 #define MAX_WORDS 20
@@ -20,6 +21,8 @@ char historyFileName[] = "history.txt"; // this is global just so I can change t
 char words[MAX_WORDS][MAX_WORD_CHARS], currentPath[PATH_MAX];
 short wordNr; // index when adding words, start from 0, after the word addition, it becomes the number, so it's +1 from the index
 short wordCharsNr[MAX_WORDS]; // they are indexes - start from 0
+short redirectFilePlace; // index of the place in words where the redirect file is stored
+bool redirect = false, redirectAppend = false, redirectReverse = false; // >, >>, <
 
 void cp(char *args[])
 {
@@ -191,9 +194,63 @@ bool commandDecrypt(char initialCommand[])
         
         char *args[20];
         for (short i = 0; i < wordNr; ++i)
+        {
             *(args + i) = words[i];
+            if (strcmp(words[i], ">") == 0)
+            {
+                redirect = true;
+                redirectFilePlace = ++i;
+                continue;
+            }
+            else if (strcmp(words[i], ">>") == 0)
+            {
+                redirectAppend = true;
+                redirectFilePlace = ++i;
+                continue;
+            }
+            else if (strcmp(words[i], "<") == 0)
+            {
+                redirectReverse = true;
+                redirectFilePlace = ++i;
+                continue;
+            }
+        }
         *(args + wordNr) = nullptr;
-        
+
+        // searching which redirect it is, if there is one in the first place
+        if (redirect)
+        {
+            int fileD;
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC)) < 0) // replacing the file/truncating
+            {
+                perror("Error opening redirect file");
+                return true;
+            }
+            else
+                dup2(fileD, 1); // 1 is stdout
+        }
+        else if (redirectAppend)
+        {
+            int fileD;
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND)) < 0) // appending
+            {
+                perror("Error opening redirect file");
+                return true;
+            }
+            else
+                dup2(fileD, 1); // 1 is stdout
+        }
+        else if (redirectReverse)
+        {
+            int fileD;
+            if ((fileD = open(words[redirectFilePlace], O_RDONLY)) < 0) // only reading needed
+            {
+                perror("Error opening redirect file");
+                return true;
+            }
+            else
+                dup2(fileD, 0); // 0 is stdin
+        }
         // searching which command it is
         if (strcmp(words[0], "cp") == 0)
         {

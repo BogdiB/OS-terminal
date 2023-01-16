@@ -38,6 +38,48 @@ void cp(char *args[])
         // child process
         std::string dirpath = currentPath;
         dirpath += "/cp";
+        // PUT THIS IN THE SAME FORK THAT CALLS THE FUNCTIONS
+        // searching which redirect it is, if there is one in the first place
+        int fileD;
+        if (redirect)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0) // replacing the file/truncating
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 1); // 1 is stdout
+                close(fileD);
+            }
+        }
+        else if (redirectAppend)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND, 0664)) < 0) // appending
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 1); // 1 is stdout
+                close(fileD);
+            }
+        }
+        else if (redirectIn)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_RDONLY)) < 0) // only reading needed
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 0); // 0 is stdin
+                close(fileD);
+            }
+        }
         if (execvp(dirpath.c_str(), args) == -1)
             perror("Exec error");
         exit(0);
@@ -63,6 +105,48 @@ void mv(char *args[])
         // child process
         std::string dirpath = currentPath;
         dirpath += "/mv";
+        // PUT THIS IN THE SAME FORK THAT CALLS THE FUNCTIONS
+        // searching which redirect it is, if there is one in the first place
+        int fileD;
+        if (redirect)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0) // replacing the file/truncating
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 1); // 1 is stdout
+                close(fileD);
+            }
+        }
+        else if (redirectAppend)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND, 0664)) < 0) // appending
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 1); // 1 is stdout
+                close(fileD);
+            }
+        }
+        else if (redirectIn)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_RDONLY)) < 0) // only reading needed
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 0); // 0 is stdin
+                close(fileD);
+            }
+        }
         if (execvp(dirpath.c_str(), args) == -1)
             perror("Exec error");
         exit(0);
@@ -88,6 +172,48 @@ void dirname(char *args[])
         // child process
         std::string dirpath = currentPath;
         dirpath += "/dirname";
+        // PUT THIS IN THE SAME FORK THAT CALLS THE FUNCTIONS
+        // searching which redirect it is, if there is one in the first place
+        int fileD;
+        if (redirect)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0) // replacing the file/truncating
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 1); // 1 is stdout
+                close(fileD);
+            }
+        }
+        else if (redirectAppend)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND, 0664)) < 0) // appending
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 1); // 1 is stdout
+                close(fileD);
+            }
+        }
+        else if (redirectIn)
+        {
+            if ((fileD = open(words[redirectFilePlace], O_RDONLY)) < 0) // only reading needed
+            {
+                perror("Error opening redirect file");
+                exit(0);
+            }
+            else
+            {
+                dup2(fileD, 0); // 0 is stdin
+                close(fileD);
+            }
+        }
         if (execvp(dirpath.c_str(), args) == -1)
             perror("Exec error");
         exit(0);
@@ -219,39 +345,6 @@ bool commandDecrypt(char initialCommand[])
         }
         *(args + argNr) = nullptr;
 
-        // searching which redirect it is, if there is one in the first place
-        int fileD;
-        if (redirect)
-        {
-            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0) // replacing the file/truncating
-            {
-                perror("Error opening redirect file");
-                return true;
-            }
-            else
-                dup2(fileD, 1); // 1 is stdout
-        }
-        else if (redirectAppend)
-        {
-            if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND, 0664)) < 0) // appending
-            {
-                perror("Error opening redirect file");
-                return true;
-            }
-            else
-                dup2(fileD, 1); // 1 is stdout
-        }
-        else if (redirectIn)
-        {
-            if ((fileD = open(words[redirectFilePlace], O_RDONLY)) < 0) // only reading needed
-            {
-                perror("Error opening redirect file");
-                return true;
-            }
-            else
-                dup2(fileD, 0); // 0 is stdin
-        }
-
         // searching which command it is
         if (strcmp(words[0], "cp") == 0)
         {
@@ -261,12 +354,6 @@ bool commandDecrypt(char initialCommand[])
                 return true;
             }
             cp(args);
-            if (redirect)
-                dup2(1, fileD); // 1 is stdout
-            else if (redirectAppend)
-                dup2(1, fileD); // 1 is stdout
-            else if (redirectIn)
-                dup2(0, fileD); // 0 is stdin
             return true;
         }
         else if (strcmp(words[0], "mv") == 0)
@@ -277,12 +364,12 @@ bool commandDecrypt(char initialCommand[])
                 return true;
             }
             mv(args);
-            if (redirect)
-                dup2(1, fileD); // 1 is stdout
-            else if (redirectAppend)
-                dup2(1, fileD); // 1 is stdout
-            else if (redirectIn)
-                dup2(0, fileD); // 0 is stdin
+            // if (redirect)
+            //     dup2(1, fileD); // 1 is stdout
+            // else if (redirectAppend)
+            //     dup2(1, fileD); // 1 is stdout
+            // else if (redirectIn)
+            //     dup2(0, fileD); // 0 is stdin
             return true;
         }
         else if (strcmp(words[0], "dirname") == 0)
@@ -294,12 +381,12 @@ bool commandDecrypt(char initialCommand[])
             }
             dirname(args);
             // "closing" the dup2
-            if (redirect)
-                dup2(1, fileD); // 1 is stdout
-            else if (redirectAppend)
-                dup2(1, fileD); // 1 is stdout
-            else if (redirectIn)
-                dup2(0, fileD); // 0 is stdin
+            // if (redirect)
+            //     dup2(1, fileD); // 1 is stdout
+            // else if (redirectAppend)
+            //     dup2(1, fileD); // 1 is stdout
+            // else if (redirectIn)
+            //     dup2(0, fileD); // 0 is stdin
             return true;
         }
         else
@@ -310,12 +397,12 @@ bool commandDecrypt(char initialCommand[])
                 // std::cout << COLOR_ERROR << "Error creating a process.\n" << COLOR_RESET;
                 perror("Process creation error");
                 // "closing" the dup2
-                if (redirect)
-                    dup2(1, fileD); // 1 is stdout
-                else if (redirectAppend)
-                    dup2(1, fileD); // 1 is stdout
-                else if (redirectIn)
-                    dup2(0, fileD); // 0 is stdin
+                // if (redirect)
+                //     dup2(1, fileD); // 1 is stdout
+                // else if (redirectAppend)
+                //     dup2(1, fileD); // 1 is stdout
+                // else if (redirectIn)
+                //     dup2(0, fileD); // 0 is stdin
                 return true;
             }
             if (id == 0)
@@ -323,14 +410,56 @@ bool commandDecrypt(char initialCommand[])
                 // child process
                 std::string path = "/bin/";
                 path += words[0];
+                // PUT THIS IN THE SAME FORK THAT CALLS THE FUNCTIONS
+                // searching which redirect it is, if there is one in the first place
+                int fileD;
+                if (redirect)
+                {
+                    if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_TRUNC, 0664)) < 0) // replacing the file/truncating
+                    {
+                        perror("Error opening redirect file");
+                        return true;
+                    }
+                    else
+                    {
+                        dup2(fileD, 1); // 1 is stdout
+                        close(fileD);
+                    }
+                }
+                else if (redirectAppend)
+                {
+                    if ((fileD = open(words[redirectFilePlace], O_WRONLY | O_CREAT | O_APPEND, 0664)) < 0) // appending
+                    {
+                        perror("Error opening redirect file");
+                        return true;
+                    }
+                    else
+                    {
+                        dup2(fileD, 1); // 1 is stdout
+                        close(fileD);
+                    }
+                }
+                else if (redirectIn)
+                {
+                    if ((fileD = open(words[redirectFilePlace], O_RDONLY)) < 0) // only reading needed
+                    {
+                        perror("Error opening redirect file");
+                        return true;
+                    }
+                    else
+                    {
+                        dup2(fileD, 0); // 0 is stdin
+                        close(fileD);
+                    }
+                }
                 if (execvp(path.c_str(), args) == -1)
                     perror("Command not found");
-                if (redirect)
-                    dup2(1, fileD); // 1 is stdout
-                else if (redirectAppend)
-                    dup2(1, fileD); // 1 is stdout
-                else if (redirectIn)
-                    dup2(0, fileD); // 0 is stdin
+                // if (redirect)
+                //     dup2(1, fileD); // 1 is stdout
+                // else if (redirectAppend)
+                //     dup2(1, fileD); // 1 is stdout
+                // else if (redirectIn)
+                //     dup2(0, fileD); // 0 is stdin
                 exit(0);
             }
             else
@@ -340,12 +469,12 @@ bool commandDecrypt(char initialCommand[])
             }
         }
         // "closing" the dup2
-        if (redirect)
-            dup2(1, fileD); // 1 is stdout
-        else if (redirectAppend)
-            dup2(1, fileD); // 1 is stdout
-        else if (redirectIn)
-            dup2(0, fileD); // 0 is stdin
+        // if (redirect)
+        //     dup2(1, fileD); // 1 is stdout
+        // else if (redirectAppend)
+        //     dup2(1, fileD); // 1 is stdout
+        // else if (redirectIn)
+        //     dup2(0, fileD); // 0 is stdin
     }
     // if (ok == false)
     //     std::cout << "Command '" << words[0] << "' not found. Type 'help' to view commands.\n";

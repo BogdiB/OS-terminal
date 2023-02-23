@@ -320,6 +320,9 @@ bool commandDecrypt(char initialCommand[])
         
         char *args[20];
         argNr = 0;
+        redirect = false;
+        redirectAppend = false;
+        redirectIn = false;
         for (short i = 0; i < wordNr; ++i)
         {
             if (strcmp(words[i], ">") == 0)

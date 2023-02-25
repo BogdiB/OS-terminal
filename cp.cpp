@@ -89,6 +89,7 @@ void cpr(char *source, char *dest)
     }
 }
 
+
 int cpt()
 {
     // target cp - almost the same as normal cp
@@ -135,40 +136,113 @@ int cpt()
     return 0;
 }
 
+int isDirectory(const char *path)
+{
+    // returns 1 if yes
+    struct stat statbuf;
+    if (stat(path, &statbuf) != 0)
+        return 0;
+    return S_ISDIR(statbuf.st_mode);
+}
+
 int cp()
 {
     // the basic cp functionality
-    // opening input/output file error management
-    int fD1, fD2;
-    if((fD1 = open(fD[0], O_RDONLY)) < 0)
+    // if it has more than 2 files, it means the last one is a directory
+    if (fDNr > 2)
     {
-        perror("Error opening the input file");
-        return 2;
-    }
-    if((fD2 = open(fD[1],  O_WRONLY | O_CREAT | O_TRUNC ,0664)) < 0)
-    {
-        perror("Error opening the output file");
-        return 2;
-    }
+        for (short i = 0; i < fDNr - 1; ++i) // starts from 0 and has a -1 because the last one is the destination
+        {
+            char fLoc[512];
 
-    int n, length = lseek (fD1, 0, SEEK_END) - lseek(fD1, 0, SEEK_SET); // gets the file length so 
-    char* buffer = (char *) malloc(length * sizeof(char));
+            strcpy(fLoc, fD[fDNr - 1]);
+            strcat(fLoc, "/");
+            strcat(fLoc, fD[i]);
 
-    // basic file reading and writing
-    while( (n = read(fD1, buffer, length)) > 0)
-    {
-        buffer[n] = '\0';
-        write(fD2,buffer,length);
-    }
-    if( n < 0)
-    {
-        perror("Error reading the file");
-        return 3;
-    }
+            // opening input/output file error management
+            int fD1, fD2;
+            if((fD1 = open(fD[i], O_RDONLY)) < 0)
+            {
+                perror("Error opening the input file");
+                return 2;
+            }
+            if((fD2 = open(fLoc,  O_WRONLY | O_CREAT | O_TRUNC ,0664)) < 0)
+            {
+                perror("Error opening the output file");
+                return 2;
+            }
 
-    free(buffer);
-    close(fD1);
-    close(fD2);
+            int n, length = lseek (fD1, 0, SEEK_END) - lseek(fD1, 0, SEEK_SET); // gets the file length so 
+            char* buffer = (char *) malloc(length * sizeof(char));
+
+            // basic file reading and writing
+            while((n = read(fD1, buffer, length)) > 0)
+            {
+                buffer[n] = '\0';
+                write(fD2,buffer,length);
+            }
+            if( n < 0)
+            {
+                perror("Error reading the file");
+                return 3;
+            }
+
+            free(buffer);
+            close(fD1);
+            close(fD2);
+        }
+    }
+    else
+    {
+        // opening input/output file error management
+        int fD1, fD2;
+        if((fD1 = open(fD[0], O_RDONLY)) < 0)
+        {
+            perror("Error opening the input file");
+            return 2;
+        }
+        if (!isDirectory(fD[1])) // checks if it is a directory, if not, then just open it normally
+        {
+            if((fD2 = open(fD[1],  O_WRONLY | O_CREAT | O_TRUNC ,0664)) < 0)
+            {
+                perror("Error opening the output file");
+                return 2;
+            }
+        }
+        else
+        {
+            char fLoc[512];
+
+            strcpy(fLoc, fD[1]);
+            strcat(fLoc, "/");
+            strcat(fLoc, fD[0]);
+
+            if((fD2 = open(fLoc,  O_WRONLY | O_CREAT | O_TRUNC ,0664)) < 0)
+            {
+                perror("Error opening the output file");
+                return 2;
+            }
+        }
+
+        int n, length = lseek (fD1, 0, SEEK_END) - lseek(fD1, 0, SEEK_SET); // gets the file length so 
+        char* buffer = (char *) malloc(length * sizeof(char));
+
+        // basic file reading and writing
+        while((n = read(fD1, buffer, length)) > 0)
+        {
+            buffer[n] = '\0';
+            write(fD2,buffer,length);
+        }
+        if( n < 0)
+        {
+            perror("Error reading the file");
+            return 3;
+        }
+
+        free(buffer);
+        close(fD1);
+        close(fD2);
+    }
 
     return 0;
 }

@@ -263,33 +263,21 @@ void mvt()
     }
 }
 
+int isDirectory(const char *path)
+{
+    // returns 1 if yes
+    struct stat statbuf;
+    if (stat(path, &statbuf) != 0)
+        return 0;
+    return S_ISDIR(statbuf.st_mode);
+}
+
 void mv()
 {
     char path[PATH_MAX], cPath[PATH_MAX]; // path is destination, cPath is source
     // the moving
     if (fDNr > 2)
     {
-        // source, destination
-        // fD[i], fD[fDNr - 1]
-        // getting the destination path (which is constant)
-        strcpy(path, currentPath);
-        if (fD[fDNr - 1][0] == '.')
-        {
-            // getting rid of the '.'
-            *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
-            // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
-                // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
-            if (fD[fDNr - 1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
-        }
-        else
-        {
-            if (fD[fDNr - 1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[fDNr - 1]);
-        }
-
         for (short i = 0; i < fDNr - 1; ++i) // fDNr - 1 because the last one will be the path  // fD[i], fD[fDNr - 1]
         {
             strcpy(cPath, currentPath);
@@ -300,16 +288,27 @@ void mv()
                 *(fD[i]) = *(fD[i] + 1);
                 // for (short j = 0; j < strlen(fD[i]) - 1; ++j)
                     // fD[i][j] = fD[i][j + 1];
-                if (fD[i][0] != '/')
-                    strcat(cPath, "/");
-                strcat(cPath, fD[i]);
             }
-            else
+            if (fD[i][0] != '/')
+                strcat(cPath, "/");
+            strcat(cPath, fD[i]);
+
+            // source, destination
+            // fD[i], fD[fDNr - 1]
+            // getting the destination path
+            strcpy(path, currentPath);
+            if (fD[fDNr - 1][0] == '.')
             {
-                if (fD[i][0] != '/')
-                    strcat(cPath, "/");
-                strcat(cPath, fD[i]);
+                // getting rid of the '.'
+                *(fD[fDNr - 1]) = *(fD[fDNr - 1] + 1);
+                // for (short i = 0; i < strlen(fD[fDNr - 1]) - 1; ++i)
+                    // fD[fDNr - 1][i] = fD[fDNr - 1][i + 1];
             }
+            if (fD[fDNr - 1][0] != '/')
+                strcat(path, "/");
+            strcat(path, fD[fDNr - 1]);
+            strcat(path, "/");
+            strcat(path, fD[i]);
 
             std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
             std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination
@@ -333,16 +332,12 @@ void mv()
             *(fD[1]) = *(fD[1] + 1);
             // for (short i = 0; i < strlen(fD[1]) - 1; ++i)
                 // fD[1][i] = fD[1][i + 1];
-            if (fD[1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[1]);
         }
-        else
-        {
-            if (fD[1][0] != '/')
-                strcat(path, "/");
-            strcat(path, fD[1]);
-        }
+        if (fD[1][0] != '/')
+            strcat(path, "/");
+        strcat(path, fD[1]);
+        if (isDirectory(fD[1])) // if it's a directory, add the source name
+            strcat(path, fD[0]);
 
         // getting the source directory path
         strcpy(cPath, currentPath);
@@ -352,16 +347,10 @@ void mv()
             *(fD[0]) = *(fD[0] + 1);
             // for (short i = 0; i < strlen(fD[0]) - 1; ++i)
                 // fD[0][i] = fD[0][i + 1];
-            if (fD[0][0] != '/')
-                strcat(cPath, "/");
-            strcat(cPath, fD[0]);
         }
-        else
-        {
-            if (fD[0][0] != '/')
-                strcat(cPath, "/");
-            strcat(cPath, fD[0]);
-        }
+        if (fD[0][0] != '/')
+            strcat(cPath, "/");
+        strcat(cPath, fD[0]);
 
         std::ifstream ifs(cPath, std::ios::in | std::ios::binary); // source
         std::ofstream ofs(path, std::ios::out | std::ios::binary); // destination

@@ -1,3 +1,4 @@
+# Linux Terminal
 terminalOS2.cpp is the good one:)
 A terminal project for my Operating Systems class. Made for UNIX systems.
 Has 3 remade commands:
